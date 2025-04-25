@@ -4,12 +4,13 @@ import { styles } from '@/src/styles/HomeScreenStyles';
 import { Link } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import WaveBackground from "@/src/components/WaveBackground";
+import UpcomingTraining from './upcoming-trainings';
+
 
 export default function HomeScreen() {
     const { theme } = useTheme();
 
     return (
-
         <View style={[styles.container, { backgroundColor: theme.background }]}>
             <WaveBackground />
             <SafeAreaView  style={{ flex: 1 }}  edges={[]} >
@@ -44,6 +45,17 @@ export default function HomeScreen() {
                                 style={[styles.button, { backgroundColor: theme.buttonBackground, borderColor: theme.borderColor }]}
                             >
                                 <Text style={[styles.buttonText, { color: theme.buttonText }]}>Sign up</Text>
+                            </View>
+                        </TouchableOpacity>
+                    </Link>
+
+                    {/* TEMPORARY just for testing */}
+                    <Link href="/upcoming-trainings" asChild>
+                        <TouchableOpacity activeOpacity={0.8}>
+                            <View
+                                style={[styles.button, { backgroundColor: theme.buttonBackground, borderColor: theme.borderColor }]}
+                            >
+                                <Text style={[styles.buttonText, { color: theme.buttonText }]}>UpcomingTraining</Text>
                             </View>
                         </TouchableOpacity>
                     </Link>

@@ -1,4 +1,4 @@
-import api from "./api";
+import {api} from "./api";
 import { getDB } from "../db/init";
 
 export const daysOfWeek = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];

@@ -6,6 +6,7 @@ import * as Notifications from "expo-notifications";
 import { useEffect } from 'react';
 import api from '@/src/utils/api';
 import { init as initDB } from '@/src/db/init';
+import {NotificationProvider} from "@/src/contexts/Notification";
 
 Notifications.setNotificationHandler({
     handleNotification: async () => ({
@@ -33,8 +34,10 @@ export default function Layout() {
     }
 
     return (
-        <ThemeProvider>
-            <Stack screenOptions={{ headerShown: false }} />
-        </ThemeProvider>
+        <NotificationProvider>
+            <ThemeProvider>
+                <Stack screenOptions={{ headerShown: false }} />
+            </ThemeProvider>
+        </NotificationProvider>
     );
 }

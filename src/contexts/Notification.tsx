@@ -26,7 +26,7 @@ export const useNotification = () => {
 interface NotificationProviderProps {
     children: ReactNode;
 }
-  
+
 export const NotificationProvider: React.FC<NotificationProviderProps> = ({ children }) => {
     const [expoPushToken, setExpoPushToken] = useState<string | null>(null);
     const [notification, setNotification] =
@@ -38,8 +38,8 @@ export const NotificationProvider: React.FC<NotificationProviderProps> = ({ chil
   
     useEffect(() => {
         registrateForPushNotifications().then(
-            (token) => setExpoPushToken(token),
-            (error) => setError(error)
+            (token) => {setExpoPushToken(token); console.log(`Token: ${token}`)},
+            (error) => {setError(error); console.log(`Error while getting a token: ${error}`);}
         );
         
         // notificication reseived while application is running
@@ -79,4 +79,3 @@ export const NotificationProvider: React.FC<NotificationProviderProps> = ({ chil
         </NotificationContext.Provider>
     );
 };
-

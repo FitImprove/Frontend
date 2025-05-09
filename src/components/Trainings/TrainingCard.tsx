@@ -1,7 +1,7 @@
 import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Pressable } from 'react-native';
 import { MaterialCommunityIcons, FontAwesome } from '@expo/vector-icons';
-import { Training, shortDaysOfWeek } from '../utils/training';
+import { Training, shortDaysOfWeek } from '../../utils/training';
 import { router } from 'expo-router';
 
 interface Props {
@@ -15,8 +15,18 @@ function TrainingCard({training, onDelete}: Props) {
     const end_t = new Date(t.getTime() + training.duration * 60000);
     const endMinutes = end_t.getMinutes().toString().padStart(2, "0");
     
+    const role = 'COACH';
+
     function openChat() {
+      // ToDo!
       router.push('/sign-in');
+    }
+
+    function onEdit() {
+        router.push({
+            pathname: '/trainings/edit-training',
+            params: {id: training.id}
+        });
     }
 
     return (
@@ -36,9 +46,13 @@ function TrainingCard({training, onDelete}: Props) {
             <TouchableOpacity onPress={() => openChat()}>
               <MaterialCommunityIcons name="account-tie" size={32} color="black" />
             </TouchableOpacity>
-            <TouchableOpacity onPress={() => onDelete(training.id)}>
-              <FontAwesome name="trash" size={28} color="black" style={styles.trashIcon} />
-            </TouchableOpacity>
+            {role === 'COACH' 
+              ? <TouchableOpacity onPress={onEdit}>
+                  <FontAwesome name="edit" size={28} color="black" style={styles.trashIcon} />
+              </TouchableOpacity>
+              : <TouchableOpacity onPress={() => onDelete(training.id)}>
+                  <FontAwesome name="trash" size={28} color="black" style={styles.trashIcon} />
+              </TouchableOpacity>}
         </View>
     </View>
     );
@@ -54,6 +68,11 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     elevation: 5,
     flexShrink: 1
+  },
+  pressableBox: {
+    display: 'flex',
+    flexDirection: 'row',
+    justifyContent: 'space-between',
   },
   dateSection: {
     alignItems: 'center',

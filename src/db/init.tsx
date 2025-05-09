@@ -1,25 +1,28 @@
 import * as SQLite from 'expo-sqlite';
 import api from '../utils/api';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { getUpcomingLocal, Training, TrainingStatus } from '../utils/training';
 
-interface TrainingUserDTO {
+const userType = 'COACH';
+
+export interface TrainingUserDTO {
     id: number;
     trainingId: number;
     status: string;
-    invitedAt: Date;
-    bookedAt: Date;
-    canceledAt: Date;
+    invitedAt: string;
+    bookedAt: string;
+    canceledAt: string;
 }
-
-interface TrainingDTO {
+export interface TrainingDTO {
     id: number;
+    type: string;
     forType: string;
     freeSlots: number;
-    createdAt: Date;
+    createdAt: string;
     title: string;
     description: string;
-    isCanceled: boolean;
-    time: Date;
+    canceled: boolean;
+    time: string;
     durationMinutes: number;
     coachId: number;
     coachName: string;
@@ -34,14 +37,16 @@ export async function getDB() {
 }
 
 export async function init() {
+    console.log("Init called");
     const db = await getDB();
+    await db.execAsync("DROP TABLE IF EXISTS trainings;");
     await db.execAsync(`
         CREATE TABLE IF NOT EXISTS trainings (
             id INTEGER PRIMARY KEY,
             title varchar not null,
             description varchar not null,
-            freeSlots integer not null,
-            forType varchar not null,
+            free_slots integer not null,
+            for_type varchar not null,
             time timestamp not null,
             duration integer not null,
             is_canceled boolean not null,
@@ -64,31 +69,48 @@ export async function init() {
 
     const trainingUpdateTime = await AsyncStorage.getItem('trainingUpdateTime');
     const time = new Date();
-    if (trainingUpdateTime) {
-        syncDB(new Date(trainingUpdateTime));
-    } else {
-        try {
-            const start = new Date(2020, 0, 1);
-            console.log(start.toLocaleTimeString());
-            const attendance = await api.get<TrainingUserDTO[]>(`/training-users/get-attendance/${start.toISOString().substring(0,16)}/${time.toISOString().substring(0,16)}`);
-            console.log("Got attendance");
+    console.log("Db init called, time: ", trainingUpdateTime);
+    // if (trainingUpdateTime) {
+    //     if (userType === 'COACH')
+    //         await syncDBCoach(new Date(trainingUpdateTime), db);
+    //     else 
+    //         await syncDBUser(new Date(trainingUpdateTime), db);
+    // } else {
+        if (userType === 'COACH') 
+            await initDataCoach(db);
+        else
+            await initDataRegularuser(db);
+    // }
+    // await AsyncStorage.setItem('trainingUpdateTime', time.toISOString());
+}
 
-            const resp = await api.get<TrainingUserDTO[]>('/training-users/enrolled/all');
-            console.log("Got enrolled");
-            const data = attendance.data.concat(resp.data);
-            const promises = [];
-            for (const training_user of data) {
-                api.get<TrainingDTO>(`/training/${training_user.trainingId}`).then(resp => {
-                    promises.push( insertTraining(resp.data) );
-                }).catch(e => console.log("Error while getting a training: ", e));
-            }
-            promises.push( insertTrainingUsers(data) );
-            promises.push( AsyncStorage.setItem('trainingUpdateTime', time.toISOString()) );
-            await Promise.all(promises);
-        } catch (e) {
-            console.log("Received e during db initialization: ", e);
-        }
+async function initDataRegularuser(db: SQLite.SQLiteDatabase) {
+    const time = new Date();
+    const start = new Date(2020, 0, 1);
+    const attendance = await api.get<TrainingUserDTO[]>(`/training-users/get-attendance/${start.toISOString().substring(0,16)}/${time.toISOString().substring(0,16)}`);
+
+    const resp = await api.get<TrainingUserDTO[]>('/training-users/enrolled/all');
+    const data = attendance.data.concat(resp.data);
+    const promises = [];
+    for (const training_user of data) {
+        api.get<TrainingDTO>(`/training/${training_user.trainingId}`).then(resp => {
+            promises.push( insertTraining(resp.data) );
+        }).catch(e => console.log("Error while getting a training: ", e));
     }
+    promises.push( insertTrainingUsers(data) );
+    await Promise.all(promises);
+}
+
+async function initDataCoach(db: SQLite.SQLiteDatabase) {
+    let trainigns = (await api.get<TrainingDTO[]>("/trainings/all-trainings-coach")).data;
+    console.log("Coach trainings: ", trainigns);
+    for (const t of trainigns) {
+        console.log("Calling insert");
+        await insertTraining(t);
+        console.log("Ending insert");
+    }
+    console.log("Calling get upcoming local")
+    getUpcomingLocal();
 }
 
 export async function clearDatabase() {
@@ -106,30 +128,30 @@ export async function clearDatabase() {
 }
 
 const insertTrainingSQL = `INSERT OR REPLACE INTO trainings (
-            id, title, description, freeSlots, forType, time, duration, is_canceled,
+            id, title, description, free_slots, for_type, time, duration, is_canceled,
             created_at, coach_name, gym_name, coach_id
         ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`;
 export async function insertTraining(t: TrainingDTO) {
     const db = await getDB();
-
-    const time = t.time.toString();
-    return db.runAsync(
-        insertTrainingSQL,
-        [
-            t.id,
-            t.title,
-            t.description,
-            t.freeSlots,
-            t.forType,
-            time,
-            t.durationMinutes,
-            t.isCanceled ? 1 : 0,
-            t.createdAt?.toString(),
-            t.coachName,
-            t.gymName,
-            t.coachId,
-        ]
-    );
+    try {
+        await db.runAsync(
+            insertTrainingSQL,
+            [
+                t.id,
+                t.title,
+                t.description,
+                t.freeSlots,
+                t.forType,
+                t.time,
+                t.durationMinutes,
+                t.canceled ? 1 : 0,
+                t.createdAt,
+                t.coachName,
+                t.gymName,
+                t.coachId,
+            ]
+        );
+    } catch (e) {console.log(e)}
 }
 
 const insertTrainingUserSQL = `INSERT OR REPLACE INTO training_user (
@@ -171,12 +193,23 @@ export async function insertTrainingUsers(tus: TrainingUserDTO[]) {
     }
 }
 
-export async function syncDB(_updateTime: Date) {
-    const db = await getDB();
+async function syncDBCoach(_updateTime: Date, db: SQLite.SQLiteDatabase) {
     const updateTime = _updateTime.toISOString().slice(0, 19);
+    const resp = await api.get<TrainingDTO[]>('/trainings/updates-coach', {
+        params: { time: updateTime }
+    });
+    for (const t of resp.data) {
+        try {
+            await insertTraining(t);
+            console.log(`Updated training ${t.id}`);
+        } catch (e) {
+            console.log(`Error updating training ${t.id}:`, e);
+        }
+    }
+}
 
-    console.log("ToDO! load coach's trainings");
-
+async function syncDBUser(_updateTime: Date, db: SQLite.SQLiteDatabase) {
+    const updateTime = _updateTime.toISOString().slice(0, 19);
     api.get<TrainingDTO[]>('/trainings/updates', {
         params: { time: updateTime }
     }).then(async resp => {

@@ -1,15 +1,14 @@
-import { View, Text, TouchableOpacity, Image, Button } from 'react-native';
+import { View, Text, TouchableOpacity, Image, Button, ScrollView } from 'react-native';
 import { useTheme } from '@/src/contexts/ThemeContext';
-import { styles } from '@/src/styles/HomeScreenStyles';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import WaveBackground from "@/src/components/WaveBackground";
 import { Training, getUpcomingLocal } from '@/src/utils/training';
-import { useEffect, useState } from 'react';
-import TrainingCard from '@/src/components/TrainingCard';
+import { useCallback, useEffect, useState } from 'react';
+import TrainingCard from '@/src/components/Trainings/TrainingCard';
 import { cancelTrainigRegularUser } from "@/src/utils/training";
 import { clearDatabase, init as initDB } from '@/src/db/init';
-
-import TrainingAttendance from '@/src/components/TrainingAttendence';
+import { heightPercentageToDP as hp, widthPercentageToDP as wp } from 'react-native-responsive-screen';
+import { useFocusEffect } from 'expo-router';
 
 export default function UpcomingTraining() {
     const [trainings, setTrainings] = useState<Training[]>([]);
@@ -20,9 +19,13 @@ export default function UpcomingTraining() {
         setTrainings(upcoming);
     }
 
-    useEffect(() => {
-        init();
-    }, []);
+    useFocusEffect(
+        useCallback(() => {
+            init();
+            console.log("Init called");
+            return () => {};
+        }, [])
+    );
 
     async function onDelete(trainingId: number) {
         try {
@@ -34,8 +37,14 @@ export default function UpcomingTraining() {
     }
 
     return (
-        <View style={[styles.container, { backgroundColor: theme.background }]}>
-            <WaveBackground />
+    <View style={{width: wp("100%"), height: hp("100%"), backgroundColor: theme.background}}>
+        <WaveBackground />
+        <ScrollView            contentContainerStyle={{
+                                flexGrow: 1,                justifyContent: 'center',
+                                alignItems: 'center',                paddingHorizontal: wp('5%'),
+                                paddingVertical: hp('2%'),                paddingBottom: hp('12%'),
+                            }}            keyboardShouldPersistTaps="handled"
+                        >
             <SafeAreaView  style={{ flex: 1, width: '100%' }}  edges={[]}>
                 {trainings.map((training, idx) => {
                     return <TrainingCard key={training.id} training={training} onDelete={onDelete} />
@@ -48,6 +57,7 @@ export default function UpcomingTraining() {
             }}>
                 <Text>Reload trainings</Text>
             </TouchableOpacity>
-        </View>
+        </ScrollView>
+    </View>
     );
 }

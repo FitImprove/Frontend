@@ -1,10 +1,12 @@
 import axios from 'axios';
 
 // delete in the future
-const token = "eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiI0IiwiaWF0IjoxNzQ2Mjk2NDE4LCJleHAiOjE3NDY2NTY0MTh9.Nkt35ReHj48hk1VJZsXrT_SFYo73Ptyz5irKKipyWgUJnNGwdiFLTizY1jKh8RqV33cTvc3bFjbd_tGvGfOdJw";
+const token = "eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiIxIiwiaWF0IjoxNzQ2NzkyMjA5LCJleHAiOjE3NDcxNTIyMDl9.firDavRspIljkGgj661LTtSVGzb9_c-F6805UsDNQsWB6Rps_n4wAH3ZMYlIZ_9IJqsIDDonUcqyZpcVrgUBKQ";
+
+export const apiURL = 'http://192.168.137.1:8080/api'
 
 const api = axios.create({
-  baseURL: 'http://147.175.161.225:8080/api',
+  baseURL: apiURL,
   timeout: 10000,
   // headers: {
   //   'Content-Type': 'application/json',

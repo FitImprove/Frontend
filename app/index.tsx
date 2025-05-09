@@ -4,7 +4,7 @@ import { styles } from '@/src/styles/HomeScreenStyles';
 import { Link } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import WaveBackground from "@/src/components/WaveBackground";
-import UpcomingTraining from './upcoming-trainings';
+import UpcomingTraining from './trainings/upcoming-trainings';
 
 
 export default function HomeScreen() {

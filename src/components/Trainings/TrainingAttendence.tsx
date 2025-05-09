@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Modal } from 'react-native';
-import TrainingMonthGrid from "./TrainingMonthGrid";
-import { Training } from "../utils/training";
-import { useTheme } from '../contexts/ThemeContext';
+import TrainingMonthGrid from "../Trainings/TrainingMonthGrid";
+import { Training } from "../../utils/training";
+import { useTheme } from '../../contexts/ThemeContext';
 
 interface TrainingCalendarProps {}
 
@@ -68,7 +68,6 @@ function TrainingAttendance({}: TrainingCalendarProps) {
                 <View style={styles.modalOverlay}>
                     <View style={[styles.modalBox, {backgroundColor: theme.background}]}>
                         <Text style={[styles.modalText, {color: theme.text}]}>Day: {showDate.toLocaleDateString()}</Text>
-                        {(() => {console.log("Trainings: ", trainings); console.log("Length: ", trainings.length); return null;})()}
                         {trainings.length === 0 && <Text style={{color: theme.text}}>There are no recorded trainings in this day</Text>}
                         {trainings.map((train, idx) => {
                             const t = train.time;

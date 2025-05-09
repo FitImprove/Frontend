@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
-import { getTrainignsInInterval, Training } from '../utils/training';
-import { useTheme } from '../contexts/ThemeContext';
+import { getTrainignsInInterval, Training } from '../../utils/training';
+import { useTheme } from '../../contexts/ThemeContext';
 
 interface TrainingCalendarProps {
   year: number;

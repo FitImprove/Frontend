@@ -5,7 +5,7 @@ import WaveBackground from '../src/components/WaveBackground';
 import { Link, router } from 'expo-router';
 import { useState } from 'react';
 import { heightPercentageToDP as hp, widthPercentageToDP as wp } from 'react-native-responsive-screen';
-
+import ErrorPopup from '../src/components/ErrorPopup';
 
 type Role = 'USER' | 'COACH';
 
@@ -17,35 +17,20 @@ export default function SignUpScreen() {
     const [username, setUsername] = useState('');
     const [dateOfBirth, setDateOfBirth] = useState('');
     const [role, setRole] = useState<Role | null>(null);
-
-    const [errors, setErrors] = useState({
-        firstName: '',
-        secondName: '',
-        username: '',
-        dateOfBirth: '',
-        role: '',
-    });
-
     const [modalVisible, setModalVisible] = useState(false);
+    const [errorMessage, setErrorMessage] = useState('');
+    const [isErrorPopupVisible, setIsErrorPopupVisible] = useState(false);
 
     const validateForm = () => {
-        let isValid = true;
-        const newErrors = {
-            firstName: '',
-            secondName: '',
-            username: '',
-            dateOfBirth: '',
-            role: '',
-        };
-
         if (
             !firstName ||
             firstName.length < 1 ||
             firstName.length > 128 ||
             !/^[a-zA-Z\u00C0-\u1EF9]+$/u.test(firstName)
         ) {
-            newErrors.firstName = 'First name must be 1-128 characters long and contain only letters';
-            isValid = false;
+            setErrorMessage('First name must be 1-128 characters long and contain only letters');
+            setIsErrorPopupVisible(true);
+            return false;
         }
 
         if (
@@ -54,8 +39,9 @@ export default function SignUpScreen() {
             secondName.length > 128 ||
             !/^[a-zA-Z\u00C0-\u1EF9]+$/u.test(secondName)
         ) {
-            newErrors.secondName = 'Second name must be 1-128 characters long and contain only letters';
-            isValid = false;
+            setErrorMessage('Second name must be 1-128 characters long and contain only letters');
+            setIsErrorPopupVisible(true);
+            return false;
         }
 
         if (
@@ -64,13 +50,15 @@ export default function SignUpScreen() {
             username.length > 128 ||
             !/^[a-zA-Z0-9_]+$/.test(username)
         ) {
-            newErrors.username = 'Username must be 3-128 characters long and contain only English letters, digits, and _';
-            isValid = false;
+            setErrorMessage('Username must be 3-128 characters long and contain only English letters, digits, and _');
+            setIsErrorPopupVisible(true);
+            return false;
         }
 
         if (!dateOfBirth) {
-            newErrors.dateOfBirth = 'Date of birth must be in format DD.MM.YYYY and be a valid date';
-            isValid = false;
+            setErrorMessage('Date of birth must be in format DD.MM.YYYY and be a valid date');
+            setIsErrorPopupVisible(true);
+            return false;
         } else {
             const isFormatValid = /^\d{2}\.\d{2}\.\d{4}$/.test(dateOfBirth);
             const [day, month, year] = dateOfBirth.split('.').map(Number);
@@ -83,18 +71,19 @@ export default function SignUpScreen() {
                 year <= new Date().getFullYear();
 
             if (!isFormatValid || !isDateValid) {
-                newErrors.dateOfBirth = 'Date of birth must be in format DD.MM.YYYY and be a valid date';
-                isValid = false;
+                setErrorMessage('Date of birth must be in format DD.MM.YYYY and be a valid date');
+                setIsErrorPopupVisible(true);
+                return false;
             }
         }
 
         if (!role) {
-            newErrors.role = 'Please select a role';
-            isValid = false;
+            setErrorMessage('Please select a role');
+            setIsErrorPopupVisible(true);
+            return false;
         }
 
-        setErrors(newErrors);
-        return isValid;
+        return true;
     };
 
     const handleContinue = () => {
@@ -104,6 +93,11 @@ export default function SignUpScreen() {
                 params: { firstName, secondName, username, dateOfBirth, role },
             });
         }
+    };
+
+    const closeErrorPopup = () => {
+        setIsErrorPopupVisible(false);
+        setErrorMessage('');
     };
 
     return (
@@ -137,10 +131,7 @@ export default function SignUpScreen() {
                                     placeholder="Enter first name"
                                     placeholderTextColor={theme.inputText}
                                     value={firstName}
-                                    onChangeText={(text) => {
-                                        setFirstName(text);
-                                        setErrors((prev) => ({ ...prev, firstName: '' }));
-                                    }}
+                                    onChangeText={setFirstName}
                                 />
                             </View>
                             <View style={styles.inputWrapper}>
@@ -150,10 +141,7 @@ export default function SignUpScreen() {
                                     placeholder="Enter second name"
                                     placeholderTextColor={theme.inputText}
                                     value={secondName}
-                                    onChangeText={(text) => {
-                                        setSecondName(text);
-                                        setErrors((prev) => ({ ...prev, secondName: '' }));
-                                    }}
+                                    onChangeText={setSecondName}
                                 />
                             </View>
                             <View style={styles.inputWrapper}>
@@ -163,10 +151,7 @@ export default function SignUpScreen() {
                                     placeholder="Enter username"
                                     placeholderTextColor={theme.inputText}
                                     value={username}
-                                    onChangeText={(text) => {
-                                        setUsername(text);
-                                        setErrors((prev) => ({ ...prev, username: '' }));
-                                    }}
+                                    onChangeText={setUsername}
                                 />
                             </View>
                             <View style={styles.inputWrapper}>
@@ -176,10 +161,7 @@ export default function SignUpScreen() {
                                     placeholder="DD.MM.YYYY"
                                     placeholderTextColor={theme.inputText}
                                     value={dateOfBirth}
-                                    onChangeText={(text) => {
-                                        setDateOfBirth(text);
-                                        setErrors((prev) => ({ ...prev, dateOfBirth: '' }));
-                                    }}
+                                    onChangeText={setDateOfBirth}
                                 />
                             </View>
                             <View style={styles.inputWrapper}>
@@ -194,22 +176,6 @@ export default function SignUpScreen() {
                                 </TouchableOpacity>
                             </View>
                         </View>
-
-                        {Object.values(errors).some((error) => error) && (
-                            <View style={{ marginVertical: hp('1%'), alignItems: 'center' }}>
-                                {errors.firstName ? (
-                                    <Text style={{ color: 'red', fontSize: wp('3%') }}>{errors.firstName}</Text>
-                                ) : errors.secondName ? (
-                                    <Text style={{ color: 'red', fontSize: wp('3%') }}>{errors.secondName}</Text>
-                                ) : errors.username ? (
-                                    <Text style={{ color: 'red', fontSize: wp('3%') }}>{errors.username}</Text>
-                                ) : errors.dateOfBirth ? (
-                                    <Text style={{ color: 'red', fontSize: wp('3%') }}>{errors.dateOfBirth}</Text>
-                                ) : errors.role ? (
-                                    <Text style={{ color: 'red', fontSize: wp('3%') }}>{errors.role}</Text>
-                                ) : null}
-                            </View>
-                        )}
 
                         <TouchableOpacity activeOpacity={0.8} onPress={handleContinue}>
                             <View style={[styles.button, { backgroundColor: theme.buttonBackground, borderColor: theme.borderColor }]}>
@@ -236,7 +202,6 @@ export default function SignUpScreen() {
                             style={styles.modalOption}
                             onPress={() => {
                                 setRole('USER');
-                                setErrors((prev) => ({ ...prev, role: '' }));
                                 setModalVisible(false);
                             }}
                         >
@@ -246,7 +211,6 @@ export default function SignUpScreen() {
                             style={styles.modalOption}
                             onPress={() => {
                                 setRole('COACH');
-                                setErrors((prev) => ({ ...prev, role: '' }));
                                 setModalVisible(false);
                             }}
                         >
@@ -255,6 +219,12 @@ export default function SignUpScreen() {
                     </View>
                 </View>
             </Modal>
+
+            <ErrorPopup
+                visible={isErrorPopupVisible}
+                message={errorMessage}
+                onClose={closeErrorPopup}
+            />
         </View>
     );
 }

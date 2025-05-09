@@ -16,13 +16,14 @@ const themes = {
         accent: '#1C3AFF',
         gradient: ['#FF1CC0', '#1C3AFF'],
     },
-    dark: {
+    black: {
         background: '#2A003A',
         text: '#D633A0',
         buttonBackground: '#8A2EBF',
         buttonText: '#2A003A',
         inputBackground: '#2A003A',
         inputText: '#D633A0',
+        textOnElement: '#2A003A',
         borderColor: '#D633A0',
         inputBorder: '#D633A0',
         inputContainer: '#8A2EBF',
@@ -31,9 +32,17 @@ const themes = {
     },
     contrast: {
         background: '#000000',
-        primary: '#FFFF00',
         text: '#FFFFFF',
-        accent: '#FF0000',
+        buttonBackground: '#B131FA',
+        buttonText: '#000000',
+        inputBackground: '#000000',
+        inputText: '#FFFFFF',
+        textOnElement: '#000000',
+        borderColor: '#FFFFFF',
+        inputBorder: '#FFFFFF',
+        inputContainer: '#B131FA',
+        accent: '#FFFFFF',
+        gradient: ['#B131FA', '#FFFFFF'],
     },
 };
 

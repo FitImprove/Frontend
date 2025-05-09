@@ -38,8 +38,8 @@ export const NotificationProvider: React.FC<NotificationProviderProps> = ({ chil
   
     useEffect(() => {
         registrateForPushNotifications().then(
-            (token) => {setExpoPushToken(token); console.log(`Token: ${token}`)},
-            (error) => {setError(error); console.log(`Error while getting a token: ${error}`);}
+            (token) => {setExpoPushToken(token); console.log(token);},
+            (error) => setError(error)
         );
         
         // notificication reseived while application is running

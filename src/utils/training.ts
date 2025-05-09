@@ -1,7 +1,5 @@
-import api from "./api";
+import {api} from "./api";
 import { getDB, insertTraining, TrainingDTO } from "../db/init";
-
-const userRole = 'COACH';
 
 export const daysOfWeek = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
 export const shortDaysOfWeek = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
@@ -159,13 +157,14 @@ export async function getUpcomingLocal(): Promise<Training[]> {
     console.log("Sending request");
     try {
         console.log("Selected: ", (await db.getAllAsync("SELECT * FROM trainings")));
-        if (userRole === 'COACH') {
+        // ToResolve!
+        // if (userRole === 'COACH') {
             data = await db.getAllAsync<TrainingDTO>(getUpcomingCoachSQL);
             console.log("Got data: ", data);
-        } else {
-            data = await db.getAllAsync<TrainingDTO>(getUpcomingUserSQL);
-            console.log("Somehow regular user");
-        }
+        // } else {
+        //     data = await db.getAllAsync<TrainingDTO>(getUpcomingUserSQL);
+        //     console.log("Somehow regular user");
+        // }
     } catch (e) {console.log(e)}
     let res = [];
     for (const d of data) {

@@ -1,25 +1,62 @@
 import axios from 'axios';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
-// delete in the future
-const token = "eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiIxIiwiaWF0IjoxNzQ2NzkyMjA5LCJleHAiOjE3NDcxNTIyMDl9.firDavRspIljkGgj661LTtSVGzb9_c-F6805UsDNQsWB6Rps_n4wAH3ZMYlIZ_9IJqsIDDonUcqyZpcVrgUBKQ";
+// Базовий URL для API
+const BASE_URL = 'http://147.175.160.132:8080/api';
 
-export const apiURL = 'http://192.168.137.1:8080/api'
 
-const api = axios.create({
-  baseURL: apiURL,
-  timeout: 10000,
-  // headers: {
-  //   'Content-Type': 'application/json',
-  // },
+// Створюємо екземпляр для публічних запитів (без авторизації)
+const publicApi = axios.create({
+    baseURL: BASE_URL,
+    timeout: 50000,
 });
 
+// Створюємо екземпляр для запитів зареєстрованих користувачів (з авторизацією)
+const api = axios.create({
+    baseURL: BASE_URL,
+    timeout: 50000,
+});
+
+// Функція для встановлення або видалення токена
+export const setAuthToken = async (token: string) => {
+    if (token) {
+        api.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+        await AsyncStorage.setItem('token', token);
+    } else {
+        delete api.defaults.headers.common['Authorization'];
+        await AsyncStorage.removeItem('token');
+    }
+};
+
+// Функція для завантаження токена з AsyncStorage при ініціалізації
+const initializeAuthToken = async () => {
+    try {
+        const token = await AsyncStorage.getItem('token');
+        if (token) {
+            api.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+        }
+    } catch (error) {
+        console.error('Error loading token from AsyncStorage:', error);
+    }
+};
+
+// Ініціалізуємо токен при запуску
+initializeAuthToken();
+
+// Інтерсептор для api (з авторизацією)
 api.interceptors.request.use(
-  config => {
-    if (token) 
-        config.headers.Authorization = `Bearer ${token}`;
-    return config;
-  },
-  error => Promise.reject(error)
+    (config) => {
+        return config; // Токен уже встановлений через setAuthToken або initializeAuthToken
+    },
+    (error) => Promise.reject(error)
 );
 
-export default api;
+// Інтерсептор для publicApi (без авторизації)
+publicApi.interceptors.request.use(
+    (config) => {
+        return config;
+    },
+    (error) => Promise.reject(error)
+);
+
+export { api, publicApi };

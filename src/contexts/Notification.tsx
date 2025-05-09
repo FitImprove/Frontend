@@ -26,7 +26,7 @@ export const useNotification = () => {
 interface NotificationProviderProps {
     children: ReactNode;
 }
-  
+
 export const NotificationProvider: React.FC<NotificationProviderProps> = ({ children }) => {
     const [expoPushToken, setExpoPushToken] = useState<string | null>(null);
     const [notification, setNotification] =
@@ -79,4 +79,3 @@ export const NotificationProvider: React.FC<NotificationProviderProps> = ({ chil
         </NotificationContext.Provider>
     );
 };
-

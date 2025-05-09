@@ -50,12 +50,12 @@ export default function HomeScreen() {
                     </Link>
 
                     {/* TEMPORARY just for testing */}
-                    <Link href="/upcoming-trainings" asChild>
+                    <Link href="/home" asChild>
                         <TouchableOpacity activeOpacity={0.8}>
                             <View
                                 style={[styles.button, { backgroundColor: theme.buttonBackground, borderColor: theme.borderColor }]}
                             >
-                                <Text style={[styles.buttonText, { color: theme.buttonText }]}>UpcomingTraining</Text>
+                                <Text style={[styles.buttonText, { color: theme.buttonText }]}>Home</Text>
                             </View>
                         </TouchableOpacity>
                     </Link>

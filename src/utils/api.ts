@@ -4,6 +4,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 // Базовий URL для API
 const BASE_URL = 'http://147.175.160.132:8080/api';
 
+
 // Створюємо екземпляр для публічних запитів (без авторизації)
 const publicApi = axios.create({
     baseURL: BASE_URL,

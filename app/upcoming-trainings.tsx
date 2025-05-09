@@ -7,16 +7,20 @@ import { Training, getUpcomingLocal } from '@/src/utils/training';
 import { useEffect, useState } from 'react';
 import TrainingCard from '@/src/components/TrainingCard';
 import { cancelTrainigRegularUser } from "@/src/utils/training";
+import { clearDatabase, init as initDB } from '@/src/db/init';
+
+import TrainingAttendance from '@/src/components/TrainingAttendence';
 
 export default function UpcomingTraining() {
     const [trainings, setTrainings] = useState<Training[]>([]);
     const { theme } = useTheme();
 
+    async function init() {
+        const upcoming: Training[] = await getUpcomingLocal();
+        setTrainings(upcoming);
+    }
+
     useEffect(() => {
-        async function init() {
-            const upcoming: Training[] = await getUpcomingLocal();
-            setTrainings(upcoming);
-        }
         init();
     }, []);
 
@@ -37,6 +41,13 @@ export default function UpcomingTraining() {
                     return <TrainingCard key={training.id} training={training} onDelete={onDelete} />
                 })}
             </SafeAreaView>
+            <TouchableOpacity onPress={async () => {
+                await clearDatabase();
+                await initDB();
+                init();
+            }}>
+                <Text>Reload trainings</Text>
+            </TouchableOpacity>
         </View>
     );
 }

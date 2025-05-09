@@ -68,18 +68,41 @@ export async function init() {
         syncDB(new Date(trainingUpdateTime));
     } else {
         try {
+            const start = new Date(2020, 0, 1);
+            console.log(start.toLocaleTimeString());
+            const attendance = await api.get<TrainingUserDTO[]>(`/training-users/get-attendance/${start.toISOString().substring(0,16)}/${time.toISOString().substring(0,16)}`);
+            console.log("Got attendance");
+
             const resp = await api.get<TrainingUserDTO[]>('/training-users/enrolled/all');
-            for (const training_user of resp.data) {
+            console.log("Got enrolled");
+            const data = attendance.data.concat(resp.data);
+            const promises = [];
+            for (const training_user of data) {
                 api.get<TrainingDTO>(`/training/${training_user.trainingId}`).then(resp => {
-                    insertTraining(resp.data);
+                    promises.push( insertTraining(resp.data) );
                 }).catch(e => console.log("Error while getting a training: ", e));
             }
-            insertTrainingUsers(resp.data);
+            promises.push( insertTrainingUsers(data) );
+            promises.push( AsyncStorage.setItem('trainingUpdateTime', time.toISOString()) );
+            await Promise.all(promises);
         } catch (e) {
             console.log("Received e during db initialization: ", e);
         }
     }
-    AsyncStorage.setItem('trainingUpdateTime', time.toISOString());
+}
+
+export async function clearDatabase() {
+    try {
+        AsyncStorage.removeItem('trainingUpdateTime');
+        const db = await getDB();
+        await db.execAsync(`
+            DELETE FROM training_user;
+            DELETE FROM trainings;
+        `);
+        console.log("All data deleted from the database.");
+    } catch (error) {
+        console.error("Error while clearing the database:", error);
+    }
 }
 
 const insertTrainingSQL = `INSERT OR REPLACE INTO trainings (

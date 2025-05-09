@@ -4,9 +4,11 @@ import { useFonts } from 'expo-font';
 import { Text, View } from 'react-native';
 import * as Notifications from "expo-notifications";
 import { useEffect } from 'react';
-import api from '@/src/utils/api';
+import {api} from '@/src/utils/api';
 import { init as initDB } from '@/src/db/init';
+
 import {NotificationProvider} from "@/src/contexts/Notification";
+
 
 Notifications.setNotificationHandler({
     handleNotification: async () => ({

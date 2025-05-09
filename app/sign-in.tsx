@@ -51,7 +51,7 @@ export default function SignInScreen() {
                     await AsyncStorage.setItem('role', response.data.role.toString());
                     await AsyncStorage.setItem('userId', response.data.id.toString());
                     console.log('Token saved to AsyncStorage:', token);
-                    router.push('/main');
+                    router.push('/home');
                 } else {
                     setErrorMessage('No token received from sign-in response');
                     setIsErrorPopupVisible(true);

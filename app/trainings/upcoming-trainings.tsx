@@ -22,7 +22,6 @@ export default function UpcomingTraining() {
     useFocusEffect(
         useCallback(() => {
             init();
-            console.log("Init called");
             return () => {};
         }, [])
     );

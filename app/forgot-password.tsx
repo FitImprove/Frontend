@@ -36,7 +36,7 @@ export default function ForgotPasswordScreen() {
             await api.post(`password/recover/${email}`);
             setIsSendButtonDisabled(true);
             setCountdown(60);
-        } catch (error) {
+        } catch (error: any) {
             console.error("Error during password recovery:", error);
             setErrorMessage(
                 error.response?.status === 404
@@ -50,7 +50,7 @@ export default function ForgotPasswordScreen() {
     };
 
     useEffect(() => {
-        let timer;
+        let timer: any;
         if (countdown > 0) {
             timer = setInterval(() => {
                 setCountdown((prev) => {
@@ -83,7 +83,7 @@ export default function ForgotPasswordScreen() {
                 setErrorMessage('Invalid code. Please try again.');
                 setIsErrorPopupVisible(true);
             }
-        } catch (error) {
+        } catch (error: any) {
             console.error("Error during code verification:", error);
             setErrorMessage(
                 error.response?.status === 404

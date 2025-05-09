@@ -7,7 +7,7 @@ import { MaterialCommunityIcons, FontAwesome } from '@expo/vector-icons';
 import Toast from 'react-native-toast-message';
 
 import { cancelParticipationCoach, cancelTrainigCoach, editTrainingCoach, emptyTraining, UserDTO } from '@/src/utils/training';
-import api, {apiURL} from '@/src/utils/api';
+import {api, BASE_URL} from '@/src/utils/api';
 import WaveBackground from "@/src/components/WaveBackground";
 
 export default function ViewEnrolled() {
@@ -71,10 +71,6 @@ export default function ViewEnrolled() {
         // ToDo!
     } 
 
-    for (const elem of enrolled) {
-        console.log(`${apiURL}/images/get/${elem.iconPath}`);
-    }
-
     if (enrolled.length === 0) {
         return <View style={styles.emptyContainer}>
             <WaveBackground />
@@ -102,7 +98,7 @@ export default function ViewEnrolled() {
                                         style={{ width: 50, height: 50, borderRadius: 25 }}
                                     />
                                     : <Image
-                                        source={{ uri: `${apiURL}/images/get/${u.iconPath}` }}
+                                        source={{ uri: `${BASE_URL}/images/get/${u.iconPath}` }}
                                         style={styles.userImage}
                                         resizeMode="cover"
                                     />}

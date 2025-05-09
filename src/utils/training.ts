@@ -1,4 +1,4 @@
-import {api} from "./api";
+import {api, getRole, Role} from "./api";
 import { getDB, insertTraining, TrainingDTO } from "../db/init";
 
 export const daysOfWeek = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
@@ -149,22 +149,21 @@ const getUpcomingCoachSQL = `SELECT
         t.is_canceled = FALSE
     ORDER BY t.time;
 `;
-/*  AND t.time > CURRENT_TIMESTAMP */
+/*  ToDo! AND t.time > CURRENT_TIMESTAMP */
 export async function getUpcomingLocal(): Promise<Training[]> {
-    console.log("Get trainings");
     const db = await getDB();
+    const role: Role|null = await getRole();
+    if (role === null) return [];
     let data: TrainingDTO[] = [];
-    console.log("Sending request");
     try {
         console.log("Selected: ", (await db.getAllAsync("SELECT * FROM trainings")));
-        // ToResolve!
-        // if (userRole === 'COACH') {
+        if (role === 'COACH') {
             data = await db.getAllAsync<TrainingDTO>(getUpcomingCoachSQL);
             console.log("Got data: ", data);
-        // } else {
-        //     data = await db.getAllAsync<TrainingDTO>(getUpcomingUserSQL);
-        //     console.log("Somehow regular user");
-        // }
+        } else {
+            data = await db.getAllAsync<TrainingDTO>(getUpcomingUserSQL);
+            console.log("Somehow regular user");
+        }
     } catch (e) {console.log(e)}
     let res = [];
     for (const d of data) {

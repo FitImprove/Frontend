@@ -7,7 +7,7 @@ import RNPickerSelect, { PickerStyle } from 'react-native-picker-select';
 import Toast from 'react-native-toast-message';
 
 import { cancelTrainigCoach, editTrainingCoach, emptyTraining, trainingFromDTO } from '@/src/utils/training';
-import api from '@/src/utils/api';
+import {api} from '@/src/utils/api';
 import WaveBackground from "@/src/components/WaveBackground";
 import { Training } from '@/src/utils/training';
 import TrainingCancelConfirm from '@/src/components/Trainings/TrainingCancelConfirm';

@@ -2,8 +2,7 @@ import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 // Базовий URL для API
-const BASE_URL = 'http://147.175.160.132:8080/api';
-
+const BASE_URL = 'http://192.168.137.1:8080/api';
 
 // Створюємо екземпляр для публічних запитів (без авторизації)
 const publicApi = axios.create({
@@ -59,4 +58,16 @@ publicApi.interceptors.request.use(
     (error) => Promise.reject(error)
 );
 
-export { api, publicApi };
+type Role = 'USER' | 'COACH';
+async function getRole(): Promise<Role|null> {
+    switch (await AsyncStorage.getItem('role')) {
+        case 'USER':
+          return 'USER';
+        case 'COACH':
+          return 'COACH';
+        default:
+          return null;
+    }
+}
+
+export { api, publicApi, BASE_URL, Role, getRole };

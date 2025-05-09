@@ -1,22 +1,29 @@
 import React from 'react';
 import { View, TouchableOpacity, Text } from 'react-native';
-import { useRouter } from 'expo-router';
+import { Href, Router, useRouter } from 'expo-router';
 import { widthPercentageToDP as wp } from 'react-native-responsive-screen';
 import BottomNavWave from './BottomNavWave'; // Імпортуємо хвилястий фон
 
-export default function BottomNavigation() {
-    const router = useRouter();
+type NavigationItem = {
+    id: string;
+    icon: string;
+    route: Href;
+};
 
-    const navigationItems = [
-        { id: 'chat', icon: '💬', route: '/chats' },
-        { id: 'searchCoaches', icon: '🔍', route: '/search-coaches' },
-        { id: 'addTraining', icon: '➕', route: '/add-training' },
-        { id: 'viewSchedule', icon: '📅', route: '/schedule' },
-        { id: 'profile', icon: '👤', route: '/profile' },
+export default function BottomNavigation() {
+    const router: Router = useRouter();
+
+    const navigationItems: NavigationItem[] = [
+        // { id: 'chat', icon: '💬', route: '/' },
+        // { id: 'searchCoaches', icon: '🔍', route: '/' },
+        // { id: 'addTraining', icon: '➕', route: '/add-training' },
+        // { id: 'viewSchedule', icon: '📅', route: '/schedule' },
+        // { id: 'profile', icon: '👤', route: '/' },
     ];
 
-    const handleNavigation = (route) => {
+    const handleNavigation = (route: Href) => {
         router.push(route);
+        router.push('/sign-in');
     };
 
     return (

@@ -1,5 +1,5 @@
 import * as SQLite from 'expo-sqlite';
-import api from '../utils/api';
+import {api} from '../utils/api';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { getUpcomingLocal, Training, TrainingStatus } from '../utils/training';
 
@@ -37,7 +37,6 @@ export async function getDB() {
 }
 
 export async function init() {
-    console.log("Init called");
     const db = await getDB();
     await db.execAsync("DROP TABLE IF EXISTS trainings;");
     await db.execAsync(`
@@ -103,13 +102,9 @@ async function initDataRegularuser(db: SQLite.SQLiteDatabase) {
 
 async function initDataCoach(db: SQLite.SQLiteDatabase) {
     let trainigns = (await api.get<TrainingDTO[]>("/trainings/all-trainings-coach")).data;
-    console.log("Coach trainings: ", trainigns);
     for (const t of trainigns) {
-        console.log("Calling insert");
         await insertTraining(t);
-        console.log("Ending insert");
     }
-    console.log("Calling get upcoming local")
     getUpcomingLocal();
 }
 

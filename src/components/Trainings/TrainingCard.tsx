@@ -1,8 +1,9 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Pressable } from 'react-native';
 import { MaterialCommunityIcons, FontAwesome } from '@expo/vector-icons';
 import { Training, shortDaysOfWeek } from '../../utils/training';
 import { router } from 'expo-router';
+import { getRole, Role } from '@/src/utils/api';
 
 interface Props {
     training: Training;
@@ -14,8 +15,18 @@ function TrainingCard({training, onDelete}: Props) {
     const startMinutes = t.getMinutes().toString().padStart(2, "0");
     const end_t = new Date(t.getTime() + training.duration * 60000);
     const endMinutes = end_t.getMinutes().toString().padStart(2, "0");
+
+    const [role, setRole] = useState<Role>('COACH');
     
-    const role = 'COACH';
+    useEffect(() => {
+        getRole().then((role: Role|null) => {
+            if (role === undefined) {
+                console.log("Exception. Failed to identify a users role");
+                return;
+            }
+            setRole(role as Role);
+        })
+    }, []);
 
     function openChat() {
       // ToDo!

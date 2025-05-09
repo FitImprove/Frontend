@@ -7,7 +7,7 @@ import RNPickerSelect, { PickerStyle } from 'react-native-picker-select';
 import Toast from 'react-native-toast-message';
 
 import { cancelTrainigCoach, editTrainingCoach, emptyTraining, UserDTO } from '@/src/utils/training';
-import api from '@/src/utils/api';
+import {api} from '@/src/utils/api';
 import WaveBackground from "@/src/components/WaveBackground";
 import { Training } from '@/src/utils/training';
 import TrainingCancelConfirm from '@/src/components/Trainings/TrainingCancelConfirm';
@@ -35,7 +35,7 @@ export default function CreateTraining() {
     const createTrainingSuccess = () => {
         Toast.show({
             type: 'success',
-            text1: 'Training was created',
+            text1: 'Training was',
             text2: `The training changes where succesfully changed`,
             visibilityTime: 3000,
         });

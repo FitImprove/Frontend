@@ -9,9 +9,12 @@ import { Switch, Modal } from 'react-native';
 import BottomNavigation from '@/src/components/BottomNavigation';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { api } from '@/src/utils/api';
+import { api, getRole, Role } from '@/src/utils/api';
 import ErrorPopup from '../src/components/ErrorPopup';
-
+import * as ImagePicker from 'expo-image-picker';
+import { Image } from 'react-native';
+import * as FileSystem from 'expo-file-system';
+import { encode } from 'base64-arraybuffer';
 export default function ProfileScreen() {
     const { theme, toggleTheme } = useTheme();
     const { expoPushToken } = useNotification();
@@ -24,7 +27,7 @@ export default function ProfileScreen() {
     const [username, setUsername] = useState('');
     const [dateOfBirth, setDateOfBirth] = useState('');
     const [gender, setGender] = useState('');
-    const [role, setRole] = useState('');
+    const [role, setRole] = useState<Role>('USER');
     const [selfInformation, setSelfInformation] = useState('');
     const [fields, setFields] = useState('');
     const [skills, setSkills] = useState('');
@@ -41,7 +44,9 @@ export default function ProfileScreen() {
     const [isErrorPopupVisible, setIsErrorPopupVisible] = useState(false);
     const [isEditing, setIsEditing] = useState(false);
     const [isThemeModalVisible, setIsThemeModalVisible] = useState(false);
-
+    const [profileImage, setProfileImage] = useState(null);
+    const [imageDescriptors, setImageDescriptors] = useState([]);
+    const [initialProfileImage, setInitialProfileImage] = useState<string | null>(null);
     // Стани для початкових значень
     const [initialSettings, setInitialSettings] = useState({
         theme: '',
@@ -68,14 +73,45 @@ export default function ProfileScreen() {
 
     // Доступні теми
     const themes = ['Purple', 'Black', 'High Contrast'];
+    const fetchImageByPath = async (path: string): Promise<string> => {
+        try {
+            // Використовуємо path як частину імені файла (прибираємо недозволені символи)
+            if(!isEditing) {
+                console.log("hi");
+                const safeFileName = path.replace(/[^a-z0-9]/gi, '_').toLowerCase();
+                const fileUri = `${FileSystem.cacheDirectory}${safeFileName}.png`;
 
+                // Перевіряємо, чи файл вже існує
+                const fileInfo = await FileSystem.getInfoAsync(fileUri);
+                if (fileInfo.exists) {
+                    return fileUri;
+                }
+
+                // Якщо не існує — завантажуємо
+                const response = await api.get(`/images/get/${path}`, {
+                    responseType: 'arraybuffer',
+                });
+
+                const base64String = encode(response.data);
+
+                await FileSystem.writeAsStringAsync(fileUri, base64String, {
+                    encoding: FileSystem.EncodingType.Base64,
+                });
+
+                return fileUri;
+            }
+        } catch (error) {
+            console.error('Помилка при обробці зображення:', error);
+            throw error;
+        }
+    };
     // Завантаження даних користувача та оновлення після повернення з MapSearchScreen
     useEffect(() => {
         const loadUserData = async () => {
             try {
-                const storedRole = await AsyncStorage.getItem('role');
-                if (storedRole) {
-                    setRole(storedRole);
+                const _storedRole = await getRole();
+                if (_storedRole) {
+                    setRole(_storedRole);
                 } else {
                     setErrorMessage('Role not found. Please sign in again.');
                     setIsErrorPopupVisible(true);
@@ -138,6 +174,17 @@ export default function ProfileScreen() {
                         selfIntroduction: userData.selfIntroduction || '',
                         experience: userData.worksInFieldSince ? new Date(userData.worksInFieldSince).getFullYear().toString() : '',
                     });
+                    const descriptorsResponse = await api.get('/images/descriptors');
+                    const descriptorsData = descriptorsResponse.data;
+                    setImageDescriptors(descriptorsData || []);
+
+
+                    if (descriptorsData && descriptorsData.length > 0 && descriptorsData[0].path) {
+                        const base64Image = await fetchImageByPath(descriptorsData[0].path);
+                        setProfileImage(base64Image);
+                    } else {
+                        setProfileImage(null);
+                    }
                 }
 
                 // Оновлення координат і адреси з параметрів
@@ -147,21 +194,54 @@ export default function ProfileScreen() {
                     setAddress(params.address.toString());
                 }
             } catch (error) {
-                console.error('Error loading user data:', error);
+                console.error('Error loading user data or images:', error);
                 if (error.response?.status === 401) {
                     setErrorMessage('Session expired. Please sign in again.');
                     router.push('/sign-in');
+                } else if (error.response?.status === 403) {
+                    setErrorMessage('Access denied.');
                 } else if (error.response?.status === 404) {
-                    setErrorMessage('User not found.');
+                    setErrorMessage('User or images not found.');
                 } else {
-                    setErrorMessage('Failed to load user data. Please try again.');
+                    setErrorMessage('Failed to load user data or images. Please try again.');
                 }
                 setIsErrorPopupVisible(true);
             }
         };
         loadUserData();
     }, [params]);
+    // Image picker handler
+    const handleImagePick = async () => {
+        console.log('handleImagePick викликано');
 
+        // Перевірка дозволів для доступу до галереї
+        const permissionResult = await ImagePicker.requestMediaLibraryPermissionsAsync();
+        if (!permissionResult.granted) {
+            console.log('Дозвіл на доступ до галереї не надано');
+            setErrorMessage('Дозвіл на доступ до галереї не надано');
+            setIsErrorPopupVisible(true);
+            return;
+        }
+
+        // Виклик пікера для вибору зображення
+        const result = await ImagePicker.launchImageLibraryAsync({
+            mediaTypes: ImagePicker.MediaTypeOptions.Images, // Тільки зображення
+            quality: 1, // Максимальна якість
+            allowsEditing: false, // Чи дозволити редагування (обрізку) зображення
+        });
+
+        console.log('Відповідь від ImagePicker:', result);
+
+        if (!result.canceled && result.assets && result.assets.length > 0) {
+            const imageUri = result.assets[0].uri;
+            console.log('Вибране зображення URI:', imageUri);
+            setProfileImage(imageUri); // Встановлюємо локальний URI для попереднього перегляду
+        } else {
+            console.log('Вибір скасовано');
+            setErrorMessage('Вибір зображення скасовано');
+            setIsErrorPopupVisible(true);
+        }
+    };
     // Валідація полів
     const validateFields = () => {
         // Обов’язкові поля
@@ -254,14 +334,40 @@ export default function ProfileScreen() {
 
         try {
             let hasChanges = false;
+            if (profileImage && profileImage.startsWith('file://')) {
+                // Видалення старого зображення, якщо воно єї
+                if (imageDescriptors.length > 0) {
+                    console.log(imageDescriptors[0].id);
+                    await api.delete(`/images/del/${imageDescriptors[0].id}`);
+                }
 
+                const formData = new FormData();
+                formData.append('file', {
+                    uri: profileImage,
+                    name: 'profile.png',
+                    type: 'image/png',
+                } as any);
+            // , {
+            //         headers: {
+            //             'Content-Type': 'multipart/form-data',
+            //         },
+            //     }
+                const response = await api.post(`/images/upload`, formData);
+
+                const newImage = response.data; // PubImageDTO з id, userId, path
+                console.log('Нове зображення:', newImage);
+                // const fileUri = await fetchImageByPath(newImage.path);
+                // setProfileImage(fileUri);
+                setImageDescriptors([newImage]);
+                hasChanges = true;
+            }
             // Перевірка змін у профілі користувача
             const userPayload = {
                 name,
                 surname,
                 username,
                 dateOfBirth,
-                gender: gender || null,
+                gender: gender.toUpperCase() || null,
                 selfInformation: selfInformation || null,
                 fields: fields ? fields.split(', ').filter(f => f) : null,
                 skills: skills ? skills.split(', ').filter(s => s) : null,
@@ -440,7 +546,16 @@ export default function ProfileScreen() {
                         notifications: userData.settings.notifications || false,
                     });
                 }
+                const descriptorsResponse = await api.get('/images/descriptors');
+                const descriptorsData = descriptorsResponse.data;
+                setImageDescriptors(descriptorsData || []);
 
+                if (descriptorsData && descriptorsData.length > 0 && descriptorsData[0].path) {
+                    const base64Image = await fetchImageByPath(descriptorsData[0].path);
+                    setProfileImage(base64Image);
+                } else {
+                    setProfileImage(null);
+                }
                 // Оновлення початкових значень user
                 setInitialUser({
                     name: userData.name || '',
@@ -534,11 +649,30 @@ export default function ProfileScreen() {
 
                         {/* Іконка профілю */}
                         <View style={styles.profileIconContainer}>
-                            <View style={[styles.profileIcon, { borderColor: theme.borderColor }]}>
-                                <Text style={{ fontSize: wp('10%'), color: theme.text }}>👤</Text>
-                            </View>
+                            {profileImage ? (
+                                <Image
+                                    source={{ uri: profileImage }}
+                                    style={[styles.profileIcon, { borderColor: theme.borderColor }]}
+                                />
+                            ) : (
+                                <View style={[styles.profileIcon, { borderColor: theme.borderColor }]}>
+                                    <Text style={{ fontSize: wp('10%'), color: theme.text }}>👤</Text>
+                                </View>
+                            )}
+                            {isEditing && (
+                                <TouchableOpacity
+                                    onPress={handleImagePick}
+                                    style={{
+                                        marginTop: hp('1%'),
+                                        padding: wp('2%'),
+                                        backgroundColor: theme.buttonBackground,
+                                        borderRadius: 5,
+                                    }}
+                                >
+                                    <Text style={{ color: theme.text, fontSize: wp('4%') }}>Upload Image</Text>
+                                </TouchableOpacity>
+                            )}
                         </View>
-
                         {/* Поля профілю */}
                         <View style={[styles.inputContainer, { backgroundColor: theme.inputContainer, borderColor: theme.borderColor }]}>
                             <View style={styles.inputWrapper}>
@@ -620,7 +754,7 @@ export default function ProfileScreen() {
                             </View>
 
                             {/* Додаткові поля для тренерів */}
-                            {role.toLowerCase() === 'coach' && (
+                            {role === 'COACH' && (
                                 <>
                                     <View style={styles.inputWrapper}>
                                         <Text style={[styles.label, { color: theme.textOnElement }]}>Fields</Text>
@@ -687,7 +821,7 @@ export default function ProfileScreen() {
                         </View>
 
                         {/* Контейнер із клієнтами (тільки для тренерів, не редагується) */}
-                        {role.toLowerCase() === 'coach' && (
+                        {role === 'COACH' && (
                             <View style={[styles.inputContainer, { backgroundColor: theme.inputContainer, borderColor: theme.borderColor, marginTop: hp('2%') }]}>
                                 <Text style={[styles.label, { color: theme.text, marginBottom: hp('1%') }]}>Clients</Text>
                                 <View style={styles.clientsWrapper}>

@@ -39,11 +39,12 @@ export default function SignInScreen() {
     const handleSignIn = async () => {
         if (validateForm()) {
             try {
+                console.log("hi");
                 const response = await publicApi.post("/users/signIn", {
                     email: email,
                     password: password,
                 });
-
+                console.log("hi");
                 // Зберігаємо токен у AsyncStorage
                 const token = response.data.token;
                 if (token) {

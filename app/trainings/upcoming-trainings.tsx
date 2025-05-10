@@ -56,6 +56,7 @@ export default function UpcomingTraining() {
             }}>
                 <Text>Reload trainings</Text>
             </TouchableOpacity>
+
         </ScrollView>
     </View>
     );

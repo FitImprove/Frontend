@@ -11,6 +11,7 @@ export const styles = StyleSheet.create({
         alignItems: 'center',
         marginTop:hp('4%'),
     },
+
     searchContainer: {
         padding: wp('2%'),
         flexDirection: 'row',
@@ -43,9 +44,9 @@ export const styles = StyleSheet.create({
         alignItems: 'center',
     },
     profileIcon: {
-        width: wp('25%'),
-        height: wp('25%'),
-        borderRadius: wp('12.5%'),
+        width: wp('20%'),
+        height: wp('20%'),
+        borderRadius: wp('10%'),
         borderWidth: 2,
         justifyContent: 'center',
         alignItems: 'center',

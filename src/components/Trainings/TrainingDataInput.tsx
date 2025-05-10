@@ -89,7 +89,7 @@ export default function TrainingDataInput({ training, setTraining, isTimeChangab
                 {isDateOpen && <DateTimePicker 
                     value={training.time}
                     mode='date'
-                    display={Platform.OS === 'ios' ? 'spinner' : 'default'}
+                    display={ 'default'}
                     onChange={(e: any, d: Date|undefined) => {
                         setIsDateOpen(false);
                         setTraining(t => ({ ...t, time: d || t.time }));

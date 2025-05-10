@@ -74,7 +74,7 @@ export default function SignUpScreen2() {
                     console.log('Token saved to AsyncStorage:', token);
                     console.log('Role saved to AsyncStorage:', response.data.role);
 
-                    router.push('/main');
+                    router.push('/home');
                 }
                 else {
                     setErrorMessage('No token or user ID received from sign-up response');

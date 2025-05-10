@@ -7,6 +7,7 @@ import TrainingCard from '@/src/components/Trainings/TrainingCard';
 import TrainingAttendance from '@/src/components/Trainings/TrainingAttendence';
 import {styles} from '@/src/styles/HomeScreenStyles';
 import { useRouter, Link, useFocusEffect } from 'expo-router';
+import BottomNavigation from "@/src/components/BottomNavigation";
 
 const UPCOMING_TRAININGS_CNT = 2;
 
@@ -66,6 +67,7 @@ export default function Home() {
                     <Text style={[styles.buttonText, { color: theme.buttonText }]}>CreateTraining</Text>
                 </View>
             </TouchableOpacity>
+            <BottomNavigation />
         </View>
     )
 }

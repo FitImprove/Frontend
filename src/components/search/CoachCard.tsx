@@ -18,7 +18,10 @@ const CoachCard: React.FC<CoachCardProps> = ({ coach, onBook }) => {
 
     // ToDo! add image, add route to choach's profile
     return <View style={styles.card}>
-        <Pressable style={styles.inBox} onPress={() => router.push('/sign-in')}>
+        <Pressable style={styles.inBox} onPress={() => router.push({
+            pathname: '/view-profile',
+            params: { userId: coach.id.toString() },
+        })}>
             <View style={styles.iconContainer}>
                 <MaterialIcons name="account-circle" size={40} color={theme.text} />
             </View>

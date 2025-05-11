@@ -101,6 +101,7 @@ export default function ChatsScreen() {
                         setErrorMessage('Chats not found.');
                     } else {
                         setErrorMessage('Failed to load chats. Please try again.');
+                        router.push("/home");
                     }
                     setIsErrorPopupVisible(true);
                 }

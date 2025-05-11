@@ -10,14 +10,20 @@ import BottomNavigation from '@/src/components/BottomNavigation';
 import { useRole } from '@/src/contexts/RoleContext';
 import TrainingCancelConfirm from '@/src/components/Trainings/TrainingCancelConfirm';
 import Toast from 'react-native-toast-message';
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import {api, setAuthToken} from "@/src/utils/api";
+import { registerTrainingReminderTask } from '@/src/backgroundTasks/backgroundTask';
 import { widthPercentageToDP as wp, heightPercentageToDP as hp } from 'react-native-responsive-screen';
 import getGlobalStyle from '@/src/styles/Global';
-import { api } from '@/src/utils/api';
 import { TrainingUserDTO } from '@/src/db/init';
+
 
 const UPCOMING_TRAININGS_CNT = 2;
 
 export default function Home() {
+    const { theme, toggleTheme } = useTheme();
+    const [errorMessage, setErrorMessage] = useState('');
+    const [isErrorPopupVisible, setIsErrorPopupVisible] = useState(false);
     const cancelTrainingError = (e: any) => {
         Toast.show({
             type: 'error',
@@ -35,8 +41,6 @@ export default function Home() {
     };
 
     const {theme} = useTheme();
-    const style = getStyle(theme);
-    const styles = getGlobalStyle(theme);
     const router  = useRouter();
     const {role} = useRole();
 
@@ -47,13 +51,12 @@ export default function Home() {
     async function init() {
         const upcoming: Training[] = await getUpcomingLocal();
         setTrainings(upcoming.slice(0, UPCOMING_TRAININGS_CNT));
-        if (role === 'USER')
-            setInvitations(await getInvitationsLocal());
     }
 
     useFocusEffect(
         useCallback(() => {
             init();
+            registerTrainingReminderTask();
             return () => {};
         }, [])
     );

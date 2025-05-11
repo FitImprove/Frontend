@@ -2,15 +2,17 @@ import React from 'react';
 import { View, StyleSheet } from 'react-native';
 import Svg, { Defs, LinearGradient, Stop, Path } from 'react-native-svg';
 import { widthPercentageToDP as wp, heightPercentageToDP as hp } from 'react-native-responsive-screen';
+import {useTheme} from "@/src/contexts/ThemeContext";
 
 export default function BottomNavWave({ children }) {
+    const { theme } = useTheme();
     return (
         <View style={styles.container}>
             <Svg height="100%" width="100%" viewBox="0 0 1440 320" preserveAspectRatio="none">
                 <Defs>
                     <LinearGradient id="grad" x1="0" y1="0" x2="1" y2="0">
-                        <Stop offset="0%" stopColor="#ff00cc" />
-                        <Stop offset="100%" stopColor="#3333ff" />
+                        <Stop offset="0%" stopColor={theme.gradient[0]} />
+                        <Stop offset="100%" stopColor={theme.gradient[1]} />
                     </LinearGradient>
                 </Defs>
                 <Path

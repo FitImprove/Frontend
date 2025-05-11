@@ -23,8 +23,11 @@ function TrainingCard({training, onDelete, onInvite = (t: Training) => {console.
     const {role} = useRole();
 
     function openChat() {
-      // ToDo!
-      router.push('/sign-in');
+        router.push({
+            pathname: '/view-profile',
+            params: { userId: training.coachId.toString() },
+        })
+
     }
 
     function onEdit() {

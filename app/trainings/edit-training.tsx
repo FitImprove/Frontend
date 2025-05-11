@@ -83,6 +83,7 @@ export default function EditTraining() {
                 forType: training.forType
             });
             editTrainingSuccess();
+            router.back();
         } catch (e) {
             editTrainingError(e);
             console.log("Error while commiting changes: ", e);

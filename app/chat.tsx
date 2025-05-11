@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { View, Text, TextInput, TouchableOpacity, FlatList, KeyboardAvoidingView, Platform, Image } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, FlatList, KeyboardAvoidingView, Platform, Image, Dimensions } from 'react-native';
 import { useTheme } from '@/src/contexts/ThemeContext';
-import { styles } from '@/src/styles/ChatStyles';
+import { getStyles } from '@/src/styles/ChatStyles'; // Оновлено імпорт
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { heightPercentageToDP as hp, widthPercentageToDP as wp } from 'react-native-responsive-screen';
 import { api, getBaseApi } from '@/src/utils/api';
@@ -27,8 +27,13 @@ interface Participant {
     surname: string;
 }
 
+// Визначення типу пристрою (телефон чи планшет)
+const { width } = Dimensions.get('window');
+const isTablet = width >= 768; // Планшетом вважаємо пристрій із шириною екрану >= 768 пікселів
+
 export default function ChatScreen() {
     const { theme } = useTheme();
+    const styles = getStyles(theme, isTablet); // Вибираємо стилі залежно від типу пристрою
     const router = useRouter();
     const { chatId } = useLocalSearchParams();
     const [messages, setMessages] = useState<Message[]>([]);
@@ -82,14 +87,11 @@ export default function ChatScreen() {
                 if (isNaN(parsedChatId)) {
                     throw new Error('Invalid chat ID');
                 }
-                console.log("hi");
 
                 const messagesResponse = await api.get(`/chats/${parsedChatId}/messages`);
                 setMessages(messagesResponse.data || []);
 
-
                 const chatResponse = await api.get(`/chats/${parsedChatId}`);
-
                 const chatData = chatResponse.data;
                 const participantData = storedRole === 'COACH'
                     ? chatData.regularUser
@@ -102,7 +104,6 @@ export default function ChatScreen() {
                         surname: participantData.surname || '',
                     });
 
-                    // Завантаження аватарки співрозмовника
                     try {
                         const descriptorsResponse = await api.get(`/images/descriptors/${participantData.id}`);
                         const descriptorsData = descriptorsResponse.data;
@@ -116,7 +117,6 @@ export default function ChatScreen() {
                     }
                 }
 
-                // WebSocket підключення
                 console.log('Attempting WebSocket connection to: ws://' + getBaseApi() + '/ws/chat/' + parsedChatId);
                 webSocket.current = new WebSocket(`ws://${getBaseApi()}/ws/chat/${parsedChatId}`);
 
@@ -255,9 +255,9 @@ export default function ChatScreen() {
                             <Image
                                 source={{ uri: avatar }}
                                 style={{
-                                    width: wp('8%'),
-                                    height: wp('8%'),
-                                    borderRadius: wp('4%'),
+                                    width: wp(isTablet ? '6%' : '8%'), // Адаптація розміру аватара
+                                    height: wp(isTablet ? '6%' : '8%'),
+                                    borderRadius: wp(isTablet ? '3%' : '4%'),
                                     borderWidth: 1,
                                     borderColor: theme.borderColor,
                                     marginRight: wp('2%'),
@@ -266,9 +266,9 @@ export default function ChatScreen() {
                         ) : (
                             <View
                                 style={{
-                                    width: wp('8%'),
-                                    height: wp('8%'),
-                                    borderRadius: wp('4%'),
+                                    width: wp(isTablet ? '6%' : '8%'), // Адаптація розміру аватара
+                                    height: wp(isTablet ? '6%' : '8%'),
+                                    borderRadius: wp(isTablet ? '3%' : '4%'),
                                     borderWidth: 1,
                                     borderColor: theme.borderColor,
                                     justifyContent: 'center',
@@ -276,7 +276,7 @@ export default function ChatScreen() {
                                     marginRight: wp('2%'),
                                 }}
                             >
-                                <Text style={{ fontSize: wp('5%'), color: theme.text }}>👤</Text>
+                                <Text style={{ fontSize: wp(isTablet ? '4%' : '5%'), color: theme.text }}>👤</Text>
                             </View>
                         )}
                         <Text style={[styles.headerText, { color: theme.text }]}>
@@ -290,7 +290,7 @@ export default function ChatScreen() {
                     data={messages}
                     renderItem={renderMessage}
                     keyExtractor={(item) => item.id.toString()}
-                    contentContainerStyle={{ paddingVertical: hp('2%'), paddingHorizontal: wp('5%'), flexGrow: 1 }}
+                    contentContainerStyle={{ paddingVertical: hp('2%'), paddingHorizontal: wp(isTablet ? '3%' : '5%'), flexGrow: 1 }}
                     showsVerticalScrollIndicator={false}
                     onContentSizeChange={() => {
                         if (flatListRef.current) {

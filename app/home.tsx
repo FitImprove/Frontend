@@ -56,6 +56,7 @@ export default function Home() {
             if (role === 'USER')
                 setInvitations(await getInvitationsLocal());
 
+            console.log(await AsyncStorage.getItem('token'));
             // Спроба отримати налаштування з бекенду
             const response = await api.get("/settings/user");
             console.log(response.data);

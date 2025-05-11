@@ -6,12 +6,12 @@ import { heightPercentageToDP as hp, widthPercentageToDP as wp } from 'react-nat
 import { MaterialCommunityIcons, FontAwesome } from '@expo/vector-icons';
 import Toast from 'react-native-toast-message';
 
-import { cancelParticipationCoach, cancelTrainigCoach, editTrainingCoach, emptyTraining, UserDTO } from '@/src/utils/training';
+import { cancelParticipationCoach, cancelTrainigCoach, editTrainingCoach, emptyTraining, UserForTrainingDTO } from '@/src/utils/training';
 import {api, BASE_URL} from '@/src/utils/api';
 import WaveBackground from "@/src/components/WaveBackground";
 
 export default function ViewEnrolled() {
-    const successPopup = (user: UserDTO) => {
+    const successPopup = (user: UserForTrainingDTO) => {
         Toast.show({
             type: 'success',
             text1: 'User deleted',
@@ -19,7 +19,7 @@ export default function ViewEnrolled() {
             visibilityTime: 1500,
         });
     };
-    const cancelParticipationFail = (e: any, user: UserDTO) => {
+    const cancelParticipationFail = (e: any, user: UserForTrainingDTO) => {
         Toast.show({
             type: 'error',
             text1: 'Could not cancel participation',
@@ -30,12 +30,12 @@ export default function ViewEnrolled() {
 
     const { theme } = useTheme();
     const { id, title } = useLocalSearchParams();
-    const [enrolled, setEnrolled] = useState<UserDTO[]>([]);
+    const [enrolled, setEnrolled] = useState<UserForTrainingDTO[]>([]);
     const styles = getStyle(theme);
 
     useFocusEffect(
         useCallback(() => {
-            api.get<UserDTO[]>(`/trainings/get-enrolled/${id}`).then(resp => {
+            api.get<UserForTrainingDTO[]>(`/trainings/get-enrolled/${id}`).then(resp => {
                 console.log(`Trainig with id: ${id} enrolled: `, resp.data);
                 setEnrolled(resp.data);
             }).catch(e =>  {console.log(e)});
@@ -44,13 +44,13 @@ export default function ViewEnrolled() {
     );
 
     useEffect(() => {
-        api.get<UserDTO[]>(`/trainings/get-enrolled/${id}`).then(resp => {
+        api.get<UserForTrainingDTO[]>(`/trainings/get-enrolled/${id}`).then(resp => {
             console.log(`Trainig with id: ${id} enrolled: `, resp.data);
             setEnrolled(resp.data);
         }).catch(e =>  {console.log(e)});
     }, []);
 
-    async function forcefullyCancelTrainingUser(user: UserDTO) {
+    async function forcefullyCancelTrainingUser(user: UserForTrainingDTO) {
         // ToCheck!
         try {
             await cancelParticipationCoach(user.userId, user.trainingId);

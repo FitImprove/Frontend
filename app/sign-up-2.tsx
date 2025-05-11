@@ -72,7 +72,7 @@ export default function SignUpScreen2() {
                     await AsyncStorage.setItem('role', response.data.role.toString());
                     await AsyncStorage.setItem('userId', response.data.id.toString());
                     console.log('Token saved to AsyncStorage:', token);
-                    console.log('Role saved to AsyncStorage:', response.data.role);
+                    // console.log('Role saved to AsyncStorage:', response.data.role);
 
                     router.push('/main');
                 }

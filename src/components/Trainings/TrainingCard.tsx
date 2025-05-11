@@ -1,13 +1,14 @@
-import React, { useEffect, useState } from 'react';
+import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Pressable } from 'react-native';
 import { MaterialCommunityIcons, FontAwesome } from '@expo/vector-icons';
 import { Training, shortDaysOfWeek } from '../../utils/training';
 import { router } from 'expo-router';
-import { getRole, Role } from '@/src/utils/api';
+import { useRole } from '@/src/contexts/RoleContext';
+import TrainingCancelConfirm from './TrainingCancelConfirm';
 
 interface Props {
     training: Training;
-    onDelete: (trainingId: number) => void;
+    onDelete: (training: Training) => void;
 }
 
 function TrainingCard({training, onDelete}: Props) {
@@ -16,17 +17,7 @@ function TrainingCard({training, onDelete}: Props) {
     const end_t = new Date(t.getTime() + training.duration * 60000);
     const endMinutes = end_t.getMinutes().toString().padStart(2, "0");
 
-    const [role, setRole] = useState<Role>('COACH');
-    
-    useEffect(() => {
-        getRole().then((role: Role|null) => {
-            if (role === undefined) {
-                console.log("Exception. Failed to identify a users role");
-                return;
-            }
-            setRole(role as Role);
-        })
-    }, []);
+    const {role} = useRole();
 
     function openChat() {
       // ToDo!
@@ -61,7 +52,7 @@ function TrainingCard({training, onDelete}: Props) {
               ? <TouchableOpacity onPress={onEdit}>
                   <FontAwesome name="edit" size={28} color="black" style={styles.trashIcon} />
               </TouchableOpacity>
-              : <TouchableOpacity onPress={() => onDelete(training.id)}>
+              : <TouchableOpacity onPress={() => onDelete(training)}>
                   <FontAwesome name="trash" size={28} color="black" style={styles.trashIcon} />
               </TouchableOpacity>}
         </View>
@@ -69,7 +60,7 @@ function TrainingCard({training, onDelete}: Props) {
     );
 };
 
-const styles = StyleSheet.create({
+export const styles = StyleSheet.create({
   card: {
     flexDirection: 'row',
     backgroundColor: '#B025F2',

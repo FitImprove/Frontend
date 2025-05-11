@@ -3,14 +3,13 @@ import { Modal, View, Text, TouchableOpacity, StyleSheet } from "react-native";
 import { useTheme } from "../../contexts/ThemeContext";
 
 interface Props {
-    training: Training,
-    isActive: boolean,
-    setIsActive: React.Dispatch<React.SetStateAction<boolean>>,
+    training: Training|null,
+    setTraining: React.Dispatch<React.SetStateAction<Training|null>> | ( (t: Training|null) => void ),
     onPress: (training: Training) => void,
 }
 
-export default function TrainingCancelConfirm({training, isActive, setIsActive, onPress}: Props) {
-    const theme = useTheme;
+export default function TrainingCancelConfirm({training, setTraining, onPress}: Props) {
+    if (!training) return;
     const style = getStyle();
     const time = training.time.toLocaleString(undefined, {
         year: 'numeric',
@@ -23,10 +22,10 @@ export default function TrainingCancelConfirm({training, isActive, setIsActive, 
 
     return (
     <Modal
-        visible={isActive}
+        visible={training !== null}
         transparent
         animationType="fade"
-        onRequestClose={() => setIsActive(false)}
+        onRequestClose={() => setTraining(null)}
     >
         <View style={style.overlay}>
             <View style={style.modalContainer}>
@@ -37,13 +36,13 @@ export default function TrainingCancelConfirm({training, isActive, setIsActive, 
                 <Text>Title: {training.title}</Text>
 
                 <View style={style.buttonRow}>
-                    <TouchableOpacity style={style.cancelButton} onPress={() => setIsActive(false)}>
+                    <TouchableOpacity style={style.cancelButton} onPress={() => setTraining(null)}>
                         <Text style={style.cancelText}>Cancel</Text>
                     </TouchableOpacity>
 
                     <TouchableOpacity style={style.okButton} onPress={() => {
                         onPress(training);
-                        setIsActive(false);
+                        setTraining(null);
                     }}>
                         <Text style={style.okText}>OK</Text>
                     </TouchableOpacity>

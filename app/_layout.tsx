@@ -4,10 +4,11 @@ import { useFonts } from 'expo-font';
 import { Text, View } from 'react-native';
 import * as Notifications from "expo-notifications";
 import { useEffect } from 'react';
-import {api} from '@/src/utils/api';
+import {api, getRole, Role} from '@/src/utils/api';
 import { init as initDB } from '@/src/db/init';
 
 import {NotificationProvider} from "@/src/contexts/Notification";
+import { RoleProvider, useRole } from '@/src/contexts/RoleContext';
 
 
 Notifications.setNotificationHandler({
@@ -21,8 +22,13 @@ Notifications.setNotificationHandler({
 
 export default function Layout() {
     useEffect(() => {
-        initDB();
-    });
+        async function init() {
+            console.log("Role in init: ", await getRole());
+            const role = (await getRole()) || 'USER';
+            initDB(role as Role);
+        }
+        init();
+    }, []);
 
     const [fontsLoaded] = useFonts({
         'InriaSerif-Regular': require('../assets/fonts/InriaSerif-Regular.ttf'),
@@ -39,7 +45,9 @@ export default function Layout() {
     return (
         <NotificationProvider>
             <ThemeProvider>
-                <Stack screenOptions={{ headerShown: false }} />
+                <RoleProvider>
+                    <Stack screenOptions={{ headerShown: false }} />
+                </RoleProvider>
             </ThemeProvider>
         </NotificationProvider>
     );

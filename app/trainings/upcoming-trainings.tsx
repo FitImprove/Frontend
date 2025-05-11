@@ -1,4 +1,4 @@
-import { View, Text, TouchableOpacity, Image, Button, ScrollView } from 'react-native';
+import { View, Text, TouchableOpacity, ScrollView } from 'react-native';
 import { useTheme } from '@/src/contexts/ThemeContext';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import WaveBackground from "@/src/components/WaveBackground";
@@ -9,10 +9,15 @@ import { cancelTrainigRegularUser } from "@/src/utils/training";
 import { clearDatabase, init as initDB } from '@/src/db/init';
 import { heightPercentageToDP as hp, widthPercentageToDP as wp } from 'react-native-responsive-screen';
 import { useFocusEffect } from 'expo-router';
+import TrainingCancelConfirm from '@/src/components/Trainings/TrainingCancelConfirm';
+import { useRole } from '@/src/contexts/RoleContext';
 
 export default function UpcomingTraining() {
     const [trainings, setTrainings] = useState<Training[]>([]);
     const { theme } = useTheme();
+
+    const {role} = useRole();
+    const [trainingToCancel, setTrainingToCancel] = useState<Training|null>(null);
 
     async function init() {
         const upcoming: Training[] = await getUpcomingLocal();
@@ -26,10 +31,10 @@ export default function UpcomingTraining() {
         }, [])
     );
 
-    async function onDelete(trainingId: number) {
+    async function onCancel(training: Training) {
         try {
-            await cancelTrainigRegularUser(trainingId);
-            setTrainings(prevTrainings => prevTrainings.filter(t => t.id !== trainingId));
+            await cancelTrainigRegularUser(training.id);
+            setTrainings(prevTrainings => prevTrainings.filter(t => t.id !== training.id));
         } catch (e) {
             console.log("Error while trying to cancel training");
         }
@@ -46,16 +51,17 @@ export default function UpcomingTraining() {
                         >
             <SafeAreaView  style={{ flex: 1, width: '100%' }}  edges={[]}>
                 {trainings.map((training, idx) => {
-                    return <TrainingCard key={training.id} training={training} onDelete={onDelete} />
+                    return <TrainingCard key={idx} training={training} onDelete={(t: Training) => setTrainingToCancel(t)} />
                 })}
             </SafeAreaView>
-            <TouchableOpacity onPress={async () => {
+            {/* <TouchableOpacity onPress={async () => {
                 await clearDatabase();
                 await initDB();
                 init();
             }}>
                 <Text>Reload trainings</Text>
-            </TouchableOpacity>
+            </TouchableOpacity> */}
+            {role === 'USER' && <TrainingCancelConfirm training={trainingToCancel} setTraining={setTrainingToCancel} onPress={onCancel} />}
         </ScrollView>
     </View>
     );

@@ -131,7 +131,7 @@ export default function EditTraining() {
                     </TouchableOpacity>
                     
                     <Toast />
-                    <TrainingCancelConfirm training={training} isActive={isCancelPopup} setIsActive={setIsCancelPopup} onPress={cancelTraining}/>
+                    <TrainingCancelConfirm training={isCancelPopup ? training : null} setTraining={(a: Training|null) => setIsCancelPopup(false)} onPress={cancelTraining}/>
                 </ScrollView>
             </KeyboardAvoidingView>
         </View>

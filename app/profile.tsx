@@ -261,7 +261,7 @@ export default function ProfileScreen() {
                 surname,
                 username,
                 dateOfBirth,
-                gender: gender || null,
+                gender: gender.toUpperCase() || null,
                 selfInformation: selfInformation || null,
                 fields: fields ? fields.split(', ').filter(f => f) : null,
                 skills: skills ? skills.split(', ').filter(s => s) : null,

@@ -6,11 +6,10 @@ import { heightPercentageToDP as hp, widthPercentageToDP as wp } from 'react-nat
 import RNPickerSelect, { PickerStyle } from 'react-native-picker-select';
 import Toast from 'react-native-toast-message';
 
-import { cancelTrainigCoach, editTrainingCoach, emptyTraining, UserDTO } from '@/src/utils/training';
+import { cancelTrainigCoach, editTrainingCoach, emptyTraining, UserForTrainingDTO } from '@/src/utils/training';
 import {api} from '@/src/utils/api';
 import WaveBackground from "@/src/components/WaveBackground";
 import { Training } from '@/src/utils/training';
-import TrainingCancelConfirm from '@/src/components/Trainings/TrainingCancelConfirm';
 import TrainingDataInput, { validateTrainingData } from '@/src/components/Trainings/TrainingDataInput';
 import getGlobalStyle from '@/src/styles/Global';
 import { createTraining as createTrainignFull } from '@/src/utils/training';
@@ -42,7 +41,7 @@ export default function CreateTraining() {
     };
 
     const [training, setTraining] = useState<Training>(emptyTraining);
-    const [invited, setInvited] = useState<UserDTO[]>([]);
+    const [invited, setInvited] = useState<UserForTrainingDTO[]>([]);
 
     const { theme } = useTheme();
     const style = getStyle(theme);

@@ -8,14 +8,18 @@ import { heightPercentageToDP as hp, widthPercentageToDP as wp } from "react-nat
 import { publicApi, setAuthToken } from "../src/utils/api";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import ErrorPopup from '../src/components/ErrorPopup';
+import { useRole } from '@/src/contexts/RoleContext';
+import { init as initDB } from '@/src/db/init';
 
 export default function SignInScreen() {
     const { theme } = useTheme();
     const router = useRouter();
-    const [email, setEmail] = useState('');
-    const [password, setPassword] = useState('');
+    const [email, setEmail] = useState('roman.ganuschak2@gmail.com');
+    const [password, setPassword] = useState('Pass123');
     const [errorMessage, setErrorMessage] = useState('');
     const [isErrorPopupVisible, setIsErrorPopupVisible] = useState(false);
+
+    const {role, setRole} = useRole();
 
     // Валідація форми
     const validateForm = () => {
@@ -43,13 +47,17 @@ export default function SignInScreen() {
                     email: email,
                     password: password,
                 });
+                console.log("Got signin response");
 
                 // Зберігаємо токен у AsyncStorage
                 const token = response.data.token;
                 if (token) {
+                    console.log("Setting data", response.data);
+                    await AsyncStorage.clear();
                     await setAuthToken(token);
-                    await AsyncStorage.setItem('role', response.data.role.toString());
+                    await setRole(response.data.role.toString());
                     await AsyncStorage.setItem('userId', response.data.id.toString());
+                    await initDB(response.data.role.toString());
                     console.log('Token saved to AsyncStorage:', token);
                     router.push('/home');
                 } else {

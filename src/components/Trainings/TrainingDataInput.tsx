@@ -44,7 +44,7 @@ export default function TrainingDataInput({ training, setTraining, isTimeChangab
         month: 'long',
         day: 'numeric'
     });
-    const timeframe = `${formatTime(training.time)} -- ${formatTime(new Date(training.time.getTime() + training.duration * 60000))}`;
+    const timeframe = `${formatTime(training.time)}`;
 
     const unchangableWarning = () => {
         Toast.show({
@@ -57,7 +57,6 @@ export default function TrainingDataInput({ training, setTraining, isTimeChangab
 
     const [isDateOpen, setIsDateOpen] = useState(false);
     const [isTimeOpen, setIsTimeOpen] = useState(false);
-    const [duration, setDuration] = useState(90);
 
     return <View style={style.container}>
         <View style={style.rowContainer}>
@@ -89,7 +88,7 @@ export default function TrainingDataInput({ training, setTraining, isTimeChangab
                 {isDateOpen && <DateTimePicker 
                     value={training.time}
                     mode='date'
-                    display={Platform.OS === 'ios' ? 'spinner' : 'default'}
+                    display='default'
                     onChange={(e: any, d: Date|undefined) => {
                         setIsDateOpen(false);
                         setTraining(t => ({ ...t, time: d || t.time }));
@@ -113,7 +112,12 @@ export default function TrainingDataInput({ training, setTraining, isTimeChangab
                     display="default"
                     onChange={(e: any, d: Date|undefined) => {
                         setIsTimeOpen(false);
-                        setTraining(t => ({ ...t, time: d || t.time }))
+                        if (!d) return;
+                        const updatedDateTime = new Date(training.time);
+
+                        updatedDateTime.setHours(d.getHours());
+                        updatedDateTime.setMinutes(d.getMinutes());
+                        setTraining(t => ({ ...t, time: updatedDateTime }));
                     }}
                     />}
             </View>

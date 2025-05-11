@@ -7,14 +7,38 @@ import TrainingCard from '@/src/components/Trainings/TrainingCard';
 import TrainingAttendance from '@/src/components/Trainings/TrainingAttendence';
 import {styles} from '@/src/styles/HomeScreenStyles';
 import { useRouter, Link, useFocusEffect } from 'expo-router';
+import BottomNavigation from '@/src/components/BottomNavigation';
+import { useRole } from '@/src/contexts/RoleContext';
+import TrainingCancelConfirm from '@/src/components/Trainings/TrainingCancelConfirm';
+import Toast from 'react-native-toast-message';
 
 const UPCOMING_TRAININGS_CNT = 2;
 
 export default function Home() {
+    const cancelTrainingError = (e: any) => {
+        Toast.show({
+            type: 'error',
+            text1: 'Error during training canceling',
+            text2: e.message || e.response?.status || e,
+            visibilityTime: 5000,
+        });
+    };
+    const cancelTrainingSuccess = () => {
+        Toast.show({
+            type: 'success',
+            text1: 'Training was canceled',
+            visibilityTime: 2000,
+        });
+    };
+
     const {theme} = useTheme();
     const router  = useRouter();
+    const {role} = useRole();
 
+    console.log("Home role: ", role);
+    
     const [trainings, setTrainings] = useState<Training[]>([]);
+    const [trainingToCancel, setTrainingToCancel] = useState<Training|null>(null);
 
     async function init() {
         const upcoming: Training[] = await getUpcomingLocal();
@@ -28,22 +52,22 @@ export default function Home() {
         }, [])
     );
 
-    async function onTrainingCancel(trainingId: number) {
+    async function cancelTraining(training: Training) {
         try {
-            await cancelTrainigRegularUser(trainingId);
-            init();
+            await cancelTrainigRegularUser(training.id);
+            await init();
+            cancelTrainingSuccess();
         } catch (e) {
-            console.log("Error while canceling a training: ", e);
+            cancelTrainingError(e);
         }
     }
-
     return (
         <View style={[styles.container, {backgroundColor: theme.background}]}>
             <WaveBackground />
 
             <View style={{width: '95%', padding: 1, borderWidth: 1, borderRadius: 20, borderColor: theme.borderColor, backgroundColor: theme.background, alignItems: 'center'}}>
                 {trainings.map((training, idx) => {
-                    return <TrainingCard key={idx} training={training} onDelete={onTrainingCancel}></TrainingCard>
+                    return <TrainingCard key={idx} training={training} onDelete={(training: Training) => {setTrainingToCancel(training)}}></TrainingCard>
                 })}
                 <Link href="/trainings/upcoming-trainings" asChild>
                     <TouchableOpacity activeOpacity={0.8}>
@@ -59,13 +83,18 @@ export default function Home() {
                 <TrainingAttendance />
             </View>
             
-            <TouchableOpacity activeOpacity={0.8} onPress={() => {router.push("/trainings/create-training")}}>
-                <View
-                    style={[styles.button, { backgroundColor: theme.buttonBackground, borderColor: theme.borderColor }]}
-                >
-                    <Text style={[styles.buttonText, { color: theme.buttonText }]}>CreateTraining</Text>
-                </View>
-            </TouchableOpacity>
+            {role === 'COACH' && 
+                <TouchableOpacity activeOpacity={0.8} onPress={() => {router.push("/trainings/create-training")}}>
+                    <View
+                        style={[styles.button, { backgroundColor: theme.buttonBackground, borderColor: theme.borderColor }]}
+                    >
+                        <Text style={[styles.buttonText, { color: theme.buttonText }]}>CreateTraining</Text>
+                    </View>
+                </TouchableOpacity>}
+            <BottomNavigation />
+
+            {role === 'USER' && <TrainingCancelConfirm training={trainingToCancel} setTraining={setTrainingToCancel} onPress={cancelTraining} />}
+            <Toast />
         </View>
     )
 }

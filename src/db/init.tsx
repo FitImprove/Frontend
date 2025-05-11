@@ -1,9 +1,8 @@
 import * as SQLite from 'expo-sqlite';
-import {api} from '../utils/api';
+import {api, Role} from '../utils/api';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { getUpcomingLocal, Training, TrainingStatus } from '../utils/training';
-
-const userType = 'COACH';
+import { AxiosResponse } from 'axios';
 
 export interface TrainingUserDTO {
     id: number;
@@ -36,9 +35,10 @@ export async function getDB() {
     return db;
 }
 
-export async function init() {
+export async function init(userRole: Role) {
+    console.log("InitDB called");
+
     const db = await getDB();
-    await db.execAsync("DROP TABLE IF EXISTS trainings;");
     await db.execAsync(`
         CREATE TABLE IF NOT EXISTS trainings (
             id INTEGER PRIMARY KEY,
@@ -68,44 +68,61 @@ export async function init() {
 
     const trainingUpdateTime = await AsyncStorage.getItem('trainingUpdateTime');
     const time = new Date();
-    console.log("Db init called, time: ", trainingUpdateTime);
+    console.log(`Db init called, Role: ${userRole}, time: `, trainingUpdateTime);
+    if (userRole === 'COACH') 
+        await initDataCoach(db);
+    else
+        await initDataRegularuser(db);
     // if (trainingUpdateTime) {
     //     if (userType === 'COACH')
     //         await syncDBCoach(new Date(trainingUpdateTime), db);
     //     else 
     //         await syncDBUser(new Date(trainingUpdateTime), db);
     // } else {
-        if (userType === 'COACH') 
-            await initDataCoach(db);
-        else
-            await initDataRegularuser(db);
+        // if (userType === 'COACH') 
+        //     await initDataCoach(db);
+        // else
+        //     await initDataRegularuser(db);
     // }
     // await AsyncStorage.setItem('trainingUpdateTime', time.toISOString());
 }
 
 async function initDataRegularuser(db: SQLite.SQLiteDatabase) {
-    const time = new Date();
-    const start = new Date(2020, 0, 1);
-    const attendance = await api.get<TrainingUserDTO[]>(`/training-users/get-attendance/${start.toISOString().substring(0,16)}/${time.toISOString().substring(0,16)}`);
+    try {
+        const time = new Date();
+        const start = new Date(2020, 0, 1);
+        const attendance = await api.get<TrainingUserDTO[]>(`/training-users/get-attendance/${start.toISOString().substring(0,16)}/${time.toISOString().substring(0,16)}`);
 
-    const resp = await api.get<TrainingUserDTO[]>('/training-users/enrolled/all');
-    const data = attendance.data.concat(resp.data);
-    const promises = [];
-    for (const training_user of data) {
-        api.get<TrainingDTO>(`/training/${training_user.trainingId}`).then(resp => {
-            promises.push( insertTraining(resp.data) );
-        }).catch(e => console.log("Error while getting a training: ", e));
+        const resp = await api.get<TrainingUserDTO[]>('/training-users/enrolled/all');
+        const data = attendance.data.concat(resp.data);
+        const promises: Promise<AxiosResponse<TrainingDTO, any>>[] = [];
+        for (const training_user of data) {
+            promises.push(api.get<TrainingDTO>(`/trainings/${training_user.trainingId}`))
+        }
+        const _resp = await Promise.all(promises);
+        const trainings: TrainingDTO[] = _resp.map(r => r.data);
+        await clearDatabase();
+        for (const t of trainings) {
+            await insertTraining(t);
+        }
+        await insertTrainingUsers(data);
+    } catch (e) {
+        console.log(e);
+        throw e;
     }
-    promises.push( insertTrainingUsers(data) );
-    await Promise.all(promises);
 }
 
 async function initDataCoach(db: SQLite.SQLiteDatabase) {
-    let trainigns = (await api.get<TrainingDTO[]>("/trainings/all-trainings-coach")).data;
-    for (const t of trainigns) {
-        await insertTraining(t);
+    try {
+        let trainigns = (await api.get<TrainingDTO[]>("/trainings/all-trainings-coach")).data;
+        await db.execAsync("DROP TABLE IF EXISTS trainings;");
+        for (const t of trainigns) {
+            await insertTraining(t);
+        }
+    } catch (e) {
+        console.log(e);
+        throw e;
     }
-    getUpcomingLocal();
 }
 
 export async function clearDatabase() {

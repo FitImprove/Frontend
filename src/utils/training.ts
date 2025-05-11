@@ -1,5 +1,6 @@
 import {api, getRole, Role} from "./api";
 import { getDB, insertTraining, TrainingDTO } from "../db/init";
+import { TrainingUserDTO } from "../db/init";
 
 export const daysOfWeek = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
 export const shortDaysOfWeek = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
@@ -22,13 +23,6 @@ export function getTrainingType(type: String): TrainingType {
     // return undefined;
 }
 
-export interface TrainingUserDTO {
-    id: number;
-    userId: number;
-    trainingId: number;
-    status: TrainingStatus;
-    trainingTime: string;
-}
 
 export interface Training {
     id: number;
@@ -128,6 +122,7 @@ const getUpcomingUserSQL = `SELECT
     WHERE 
         tu.status = 'AGREED'
         AND t.is_canceled = FALSE
+        AND t.time > ?
     ORDER BY t.time;
 `;
 const getUpcomingCoachSQL = `SELECT 
@@ -147,6 +142,7 @@ const getUpcomingCoachSQL = `SELECT
         trainings t
     WHERE 
         t.is_canceled = FALSE
+        AND t.time > ?
     ORDER BY t.time;
 `;
 /*  ToDo! AND t.time > CURRENT_TIMESTAMP */
@@ -156,13 +152,13 @@ export async function getUpcomingLocal(): Promise<Training[]> {
     if (role === null) return [];
     let data: TrainingDTO[] = [];
     try {
-        console.log("Selected: ", (await db.getAllAsync("SELECT * FROM trainings")));
+        // console.log("Selected: ", (await db.getAllAsync("SELECT * FROM trainings")));
+        const localNow = new Date();
+        const localTimestamp = localNow.toISOString().slice(0, 19).replace('T', ' ');
         if (role === 'COACH') {
-            data = await db.getAllAsync<TrainingDTO>(getUpcomingCoachSQL);
-            console.log("Got data: ", data);
+            data = await db.getAllAsync<TrainingDTO>(getUpcomingCoachSQL, [localTimestamp]);
         } else {
-            data = await db.getAllAsync<TrainingDTO>(getUpcomingUserSQL);
-            console.log("Somehow regular user");
+            data = await db.getAllAsync<TrainingDTO>(getUpcomingUserSQL, [localTimestamp]);
         }
     } catch (e) {console.log(e)}
     let res = [];
@@ -223,15 +219,15 @@ export const emptyTraining: Training = {
     gymName: "",
 }
 
-export interface UserDTO {
+export interface UserForTrainingDTO {
     userId: number;
     userName: string;
     trainingId: number;
     status: string;
     iconPath: string;
 }
-export async function getEnrolledInTraining(trainingId: number): Promise<UserDTO[]> {
-    return (await api.get<UserDTO[]>(`/get-enrolled/${trainingId}`)).data;
+export async function getEnrolledInTraining(trainingId: number): Promise<UserForTrainingDTO[]> {
+    return (await api.get<UserForTrainingDTO[]>(`/get-enrolled/${trainingId}`)).data;
 }
 
 export async function cancelParticipationCoach(userId: number, trainingId: number): Promise<TrainingUserDTO> {

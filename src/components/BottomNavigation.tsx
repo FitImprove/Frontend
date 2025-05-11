@@ -14,20 +14,16 @@ export default function BottomNavigation() {
     const router: Router = useRouter();
 
     const navigationItems: NavigationItem[] = [
-        // { id: 'chat', icon: '💬', route: '/chat' },
+        // { id: 'chat', icon: '💬', route: '/' },
         // { id: 'searchCoaches', icon: '🔍', route: '/' },
-        // { id: 'addTraining', icon: '➕', route: '/trainings/create-training' },
-        // { id: 'viewSchedule', icon: '📅', route: '/trainings/upcoming-trainings' },
-        { id: 'profile', icon: '👤', route: '/profile' },
-        { id: 'search', icon: 's', route: '/search/search' }
+        // { id: 'addTraining', icon: '➕', route: '/add-training' },
+        // { id: 'viewSchedule', icon: '📅', route: '/schedule' },
+        // { id: 'profile', icon: '👤', route: '/' },
     ];
 
     const handleNavigation = (route: Href) => {
         router.push(route);
-<<<<<<< HEAD
-=======
 
->>>>>>> 6d57e8042263120a556a637a88313636b4b7ca81
     };
 
     return (

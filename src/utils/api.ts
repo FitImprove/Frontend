@@ -1,11 +1,6 @@
 import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
-<<<<<<< HEAD
-// Базовий URL для API
-const BASE_URL = 'http://147.175.162.46:8080/api';
-=======
->>>>>>> 6d57e8042263120a556a637a88313636b4b7ca81
 
 const BASE_API = '147.175.160.132:8080';
 const BASE_URL = `http://${BASE_API}/api`;

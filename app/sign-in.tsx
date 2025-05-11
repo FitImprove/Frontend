@@ -48,12 +48,8 @@ export default function SignInScreen() {
                     email: email,
                     password: password,
                 });
-<<<<<<< HEAD
                 console.log("Got signin response");
 
-=======
-                console.log("hi");
->>>>>>> 6d57e8042263120a556a637a88313636b4b7ca81
                 // Зберігаємо токен у AsyncStorage
                 const token = response.data.token;
                 if (token) {

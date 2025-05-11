@@ -15,6 +15,7 @@ import getGlobalStyle from '@/src/styles/Global';
 import { createTraining as createTrainignFull } from '@/src/utils/training';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { User } from './suggest-training';
+import {styles} from "@/src/styles/ProfileStyles";
 
 export default function CreateTraining() {
     const incorrectTrainingData = (message: string) => {
@@ -48,9 +49,9 @@ export default function CreateTraining() {
     const style = getStyle(theme);
     const styles = getGlobalStyle(theme);
 
-    useEffect(() => {
-        AsyncStorage.setItem('/trainings/suggest/invited', JSON.stringify([]));
-    }, []);
+    // useEffect(() => {
+    //     AsyncStorage.setItem('/trainings/suggest/invited', JSON.stringify([]));
+    // }, []);
 
     async function createTraining() {
         console.log("Create Training Called");
@@ -69,11 +70,16 @@ export default function CreateTraining() {
             await createTrainignFull(training, invited.map(i => i.id));
             createTrainingSuccess();
             await AsyncStorage.setItem('/trainings/suggest/invited', JSON.stringify([]));
+            router.push("/home");
         } catch (e) {
             createTrainingError(e);
         }
     }
-
+    const handleGoBack = async () => {
+        console.log('Going back');
+        await AsyncStorage.setItem('/trainings/suggest/invited', JSON.stringify([]));
+        router.back();
+    };
     return <View style={styles.container}> 
         <WaveBackground />   
         <KeyboardAvoidingView
@@ -85,6 +91,9 @@ export default function CreateTraining() {
                     paddingVertical: hp('2%'),                paddingBottom: hp('12%'),
                 }}            keyboardShouldPersistTaps="handled"
             >
+                <TouchableOpacity onPress={handleGoBack}>
+                    <Text style={[styles.text, { color: theme.accent || '#ff00cc', fontSize: wp('6%') }]}>←</Text>
+                </TouchableOpacity>
                 <Text style={[styles.titleText, {marginTop: hp("6%")}]}>Create Appointment</Text>
                 <TrainingDataInput training={training} setTraining={setTraining} isTimeChangable={true} />
 
@@ -107,4 +116,9 @@ const getStyle = (theme: Theme) => {return StyleSheet.create({
         alignItems: 'center',
         backgroundColor: theme.background,
     },
+    text: {
+        fontSize: wp('6%'),
+        fontWeight: 'bold',
+    },
+
 });}

@@ -15,7 +15,8 @@ import { Theme, useTheme } from '@/src/contexts/ThemeContext';
 import getGlobalStyle from '@/src/styles/Global';
 import { api } from '@/src/utils/api';
 import { search, GenderN, SearchCoachDTO } from '@/src/utils/user';
-import { useRouter } from 'expo-router';
+import {router, useRouter} from 'expo-router';
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 const FindCoachScreen = () => {
     const {theme} = useTheme();
@@ -45,9 +46,14 @@ const FindCoachScreen = () => {
             params: { id: c.id },
         });
     };
+    const handleGoBack = async () => {
+        console.log('Going back');
+        await AsyncStorage.setItem('/trainings/suggest/invited', JSON.stringify([]));
+        router.back();
+    };
 
     return <View style={style.container}>
-        <TouchableOpacity style={style.backButton}>
+        <TouchableOpacity onPress = {handleGoBack} style={style.backButton}>
             <MaterialIcons name="arrow-back" size={24} color={theme.accent} />
         </TouchableOpacity>
 

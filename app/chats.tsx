@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import {View, Text, TouchableOpacity, ScrollView, FlatList, Image} from 'react-native';
 import { useTheme } from '@/src/contexts/ThemeContext';
 import { styles } from '@/src/styles/ChatsStyles';
-import { useRouter } from 'expo-router';
+import {router, useRouter} from 'expo-router';
 import { heightPercentageToDP as hp, widthPercentageToDP as wp } from 'react-native-responsive-screen';
 import { api, getRole, Role } from '@/src/utils/api';
 import BottomNavigation from '@/src/components/BottomNavigation';
@@ -181,12 +181,23 @@ export default function ChatsScreen() {
             </View>
         </TouchableOpacity>
     );
+    const handleGoBack = async () => {
+        console.log('Going back');
+
+        router.back();
+    };
     return (
         <View style={[styles.container, { backgroundColor: theme.background }]}>
 
                 <View style={styles.innerContainer}>
-                    <View style={styles.header}>
-                        <Text style={[styles.headerText, { color: theme.text }]}>Chats</Text>
+                    <View style={styles.textContainer}>
+                        <TouchableOpacity onPress={handleGoBack}>
+                            <Text style={{ color: theme.accent || '#ff00cc', fontSize: wp('6%') }}>←</Text>
+                        </TouchableOpacity>
+                        <View style={styles.header}>
+                            <Text style={[styles.headerText, { color: theme.text }]}>Chats</Text>
+                        </View>
+
                     </View>
 
                     {chats.length > 0 ? (

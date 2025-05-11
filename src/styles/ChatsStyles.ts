@@ -10,6 +10,7 @@ export const styles = StyleSheet.create({
         alignItems: 'center',
         marginTop: hp('4%'),
     },
+
     header: {
         marginBottom: hp('2%'),
     },
@@ -46,9 +47,11 @@ export const styles = StyleSheet.create({
         alignItems: 'center',
     },
     textContainer: {
+        marginBottom: hp('2%'),
         flexDirection: 'row',
+        justifyContent: 'space-between',
         alignItems: 'center',
-        flex: 1,
+        width: '100%',
     },
     chatName: {
         fontSize: wp('4.5%'),

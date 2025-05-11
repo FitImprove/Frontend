@@ -8,9 +8,10 @@ import TrainingCard from '@/src/components/Trainings/TrainingCard';
 import { cancelTrainigRegularUser } from "@/src/utils/training";
 import { clearDatabase, init as initDB } from '@/src/db/init';
 import { heightPercentageToDP as hp, widthPercentageToDP as wp } from 'react-native-responsive-screen';
-import { useFocusEffect } from 'expo-router';
+import {router, useFocusEffect} from 'expo-router';
 import TrainingCancelConfirm from '@/src/components/Trainings/TrainingCancelConfirm';
 import { useRole } from '@/src/contexts/RoleContext';
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 export default function UpcomingTraining() {
     const [trainings, setTrainings] = useState<Training[]>([]);
@@ -39,7 +40,11 @@ export default function UpcomingTraining() {
             console.log("Error while trying to cancel training");
         }
     }
+    const handleGoBack = async () => {
+        console.log('Going back');
 
+        router.back();
+    };
     return (
     <View style={{width: wp("100%"), height: hp("100%"), backgroundColor: theme.background}}>
         <WaveBackground />
@@ -54,6 +59,9 @@ export default function UpcomingTraining() {
                     return <TrainingCard key={idx} training={training} onDelete={(t: Training) => setTrainingToCancel(t)} />
                 })}
             </SafeAreaView>
+            <TouchableOpacity onPress={handleGoBack}>
+                <Text style={ { color: theme.accent || '#ff00cc', fontSize: wp('6%') }}>←</Text>
+            </TouchableOpacity>
             {/* <TouchableOpacity onPress={async () => {
                 await clearDatabase();
                 await initDB();

@@ -36,7 +36,7 @@ export const styles = StyleSheet.create({
     },
     map: {
         flex: 1,
-        margin: wp('2.5%'),
+        margin: wp('8%'),
         borderRadius: 10,
     },
 
@@ -50,5 +50,26 @@ export const styles = StyleSheet.create({
         borderWidth: 1,
         marginVertical: hp('2%'),
     },
-
+    distanceContainer: {
+       marginBottom: hp('5%'),
+        alignItems: 'center',
+    },
+    distanceText: {
+        fontSize: wp('4%'),
+    },
+    header: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        paddingHorizontal: wp('5%'),
+        paddingVertical: hp('2%'),
+        marginTop:hp('4%'),
+    },
+    backButton: {
+        fontSize: wp('6%'),
+        marginRight: wp('3%'),
+    },
+    headerText: {
+        fontSize: wp('6%'),
+        fontWeight: 'bold',
+    },
 });

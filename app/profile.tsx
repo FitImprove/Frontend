@@ -9,7 +9,7 @@ import { Switch, Modal } from 'react-native';
 import BottomNavigation from '@/src/components/BottomNavigation';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { api, getRole, Role } from '@/src/utils/api';
+import { api, getRole, Role, setAuthToken } from '@/src/utils/api';
 import ErrorPopup from '../src/components/ErrorPopup';
 import * as ImagePicker from 'expo-image-picker';
 import { Image } from 'react-native';
@@ -75,9 +75,9 @@ export default function ProfileScreen() {
     const themes = ['Purple', 'Black', 'High Contrast'];
     const fetchImageByPath = async (path: string): Promise<string> => {
         try {
-            // Використовуємо path як частину імені файла (прибираємо недозволені символи)
+
             if(!isEditing) {
-                console.log("hi");
+
                 const safeFileName = path.replace(/[^a-z0-9]/gi, '_').toLowerCase();
                 const fileUri = `${FileSystem.cacheDirectory}${safeFileName}.png`;
 
@@ -105,10 +105,16 @@ export default function ProfileScreen() {
             throw error;
         }
     };
-    // Завантаження даних користувача та оновлення після повернення з MapSearchScreen
+
     useEffect(() => {
         const loadUserData = async () => {
             try {
+                const token = await AsyncStorage.getItem('token');
+                if (!token) {
+                    console.log('No token found, skipping user data load');
+
+                    return;
+                }
                 const _storedRole = await getRole();
                 if (_storedRole) {
                     setRole(_storedRole);
@@ -601,6 +607,19 @@ export default function ProfileScreen() {
         setErrorMessage('');
     };
 
+    async function handleLogout() {
+        try {
+            await setAuthToken('');
+            await AsyncStorage.removeItem('userId');
+            await AsyncStorage.removeItem('role');
+            router.push('/');
+        } catch (error) {
+            console.error('Error during logout:', error);
+            setErrorMessage('Failed to logout. Please try again.');
+            setIsErrorPopupVisible(true);
+        }
+    }
+
     return (
         <View style={[styles.container, { backgroundColor: theme.background }]}>
             <KeyboardAvoidingView
@@ -873,6 +892,11 @@ export default function ProfileScreen() {
                                 />
                             </View>
                         </View>
+                        <TouchableOpacity onPress={handleLogout}>
+                            <View style={[styles.deleteButton, { borderColor: theme.borderColor }]}>
+                                <Text style={[styles.editButtonText, { color: theme.text }]}>Logout</Text>
+                            </View>
+                        </TouchableOpacity>
                     </View>
                 </ScrollView>
 

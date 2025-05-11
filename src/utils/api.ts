@@ -1,22 +1,20 @@
 import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
-// Базовий URL для API
-const BASE_URL = 'http://147.175.160.132:8080/api';
 
-// Створюємо екземпляр для публічних запитів (без авторизації)
+const BASE_API = '147.175.160.132:8080';
+const BASE_URL = `http://${BASE_API}/api`;
+
 const publicApi = axios.create({
     baseURL: BASE_URL,
     timeout: 50000,
 });
 
-// Створюємо екземпляр для запитів зареєстрованих користувачів (з авторизацією)
 const api = axios.create({
     baseURL: BASE_URL,
     timeout: 50000,
 });
 
-// Функція для встановлення або видалення токена
 export const setAuthToken = async (token: string) => {
     if (token) {
         api.defaults.headers.common['Authorization'] = `Bearer ${token}`;
@@ -27,7 +25,6 @@ export const setAuthToken = async (token: string) => {
     }
 };
 
-// Функція для завантаження токена з AsyncStorage при ініціалізації
 const initializeAuthToken = async () => {
     try {
         const token = await AsyncStorage.getItem('token');
@@ -39,18 +36,16 @@ const initializeAuthToken = async () => {
     }
 };
 
-// Ініціалізуємо токен при запуску
 initializeAuthToken();
 
-// Інтерсептор для api (з авторизацією)
 api.interceptors.request.use(
     (config) => {
-        return config; // Токен уже встановлений через setAuthToken або initializeAuthToken
+        return config;
     },
     (error) => Promise.reject(error)
 );
 
-// Інтерсептор для publicApi (без авторизації)
+
 publicApi.interceptors.request.use(
     (config) => {
         return config;
@@ -69,5 +64,5 @@ async function getRole(): Promise<Role|null> {
           return null;
     }
 }
-
+export const getBaseApi = (): string => BASE_API;
 export { api, publicApi, BASE_URL, Role, getRole };

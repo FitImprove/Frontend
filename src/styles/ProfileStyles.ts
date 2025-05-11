@@ -11,7 +11,10 @@ export const styles = StyleSheet.create({
         alignItems: 'center',
         marginTop:hp('4%'),
     },
-
+    headerText: {
+        fontSize: wp('6%'),
+        fontWeight: 'bold',
+    },
     searchContainer: {
         padding: wp('2%'),
         flexDirection: 'row',
@@ -35,6 +38,15 @@ export const styles = StyleSheet.create({
         paddingHorizontal: wp('3%'),
         borderRadius: 10,
         borderWidth: 1,
+    },
+    deleteButton: {
+        paddingVertical: hp('1%'),
+        paddingHorizontal: wp('3%'),
+        borderRadius: 10,
+        borderWidth: 1,
+        alignItems: 'center',
+        marginBottom:hp('10%'),
+        width: wp('50%'),
     },
     editButtonText: {
         fontSize: wp('4%'),

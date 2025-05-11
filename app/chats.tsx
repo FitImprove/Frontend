@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import {View, Text, TouchableOpacity, ScrollView, FlatList, Image} from 'react-native';
+import { View, Text, TouchableOpacity, FlatList, Image, Dimensions } from 'react-native';
 import { useTheme } from '@/src/contexts/ThemeContext';
-import { styles } from '@/src/styles/ChatsStyles';
-import {router, useRouter} from 'expo-router';
+import { getStyles } from '@/src/styles/ChatsStyles'; // Оновлено імпорт
+import { router, useRouter } from 'expo-router';
 import { heightPercentageToDP as hp, widthPercentageToDP as wp } from 'react-native-responsive-screen';
 import { api, getRole, Role } from '@/src/utils/api';
 import BottomNavigation from '@/src/components/BottomNavigation';
@@ -11,10 +11,15 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useFocusEffect } from '@react-navigation/native';
 import { useCallback } from 'react';
 import * as FileSystem from "expo-file-system";
-import {encode} from "base64-arraybuffer";
+import { encode } from "base64-arraybuffer";
+
+// Визначення типу пристрою (телефон чи планшет)
+const { width } = Dimensions.get('window');
+const isTablet = width >= 768; // Планшетом вважаємо пристрій із шириною екрану >= 768 пікселів
 
 export default function ChatsScreen() {
     const { theme } = useTheme();
+    const styles = getStyles(theme, isTablet); // Вибираємо стилі залежно від типу пристрою
     const router = useRouter();
     const [chats, setChats] = useState([]);
     const [role, setRole] = useState<Role | null>(null);
@@ -23,6 +28,7 @@ export default function ChatsScreen() {
     const [profileImage, setProfileImage] = useState(null);
     const [imageDescriptors, setImageDescriptors] = useState([]);
     const [avatarCache, setAvatarCache] = useState<{ [key: number]: string | null }>({});
+
     const fetchImageByPath = async (path: string): Promise<string> => {
         try {
             const safeFileName = path.replace(/[^a-z0-9]/gi, '_').toLowerCase();
@@ -44,6 +50,7 @@ export default function ChatsScreen() {
             throw error;
         }
     };
+
     const fetchAvatar = async (userId: number): Promise<string | null> => {
         if (avatarCache[userId]) {
             return avatarCache[userId];
@@ -64,6 +71,7 @@ export default function ChatsScreen() {
             return null;
         }
     };
+
     useFocusEffect(
         useCallback(() => {
             const loadChats = async () => {
@@ -111,7 +119,6 @@ export default function ChatsScreen() {
         }, [])
     );
 
-    // Перехід до конкретного чату
     const handleChatPress = (chatId: number) => {
         router.push({
             pathname: `/chat`,
@@ -119,18 +126,15 @@ export default function ChatsScreen() {
         });
     };
 
-    // Закриття попапу помилки
     const closeErrorPopup = () => {
         setIsErrorPopupVisible(false);
         setErrorMessage('');
     };
 
-
     const getParticipantName = (chat: any) => {
         if (role === 'COACH') {
             return `${chat.regularUser?.name || 'Unknown'} ${chat.regularUser?.surname || ''}`.trim();
         } else {
-
             return `${chat.coach?.name || 'Unknown'} ${chat.coach?.surname || ''}`.trim();
         }
     };
@@ -143,7 +147,6 @@ export default function ChatsScreen() {
             time: lastMessage?.sentAt ? new Date(lastMessage.sentAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '',
         };
     };
-
 
     const renderChatItem = ({ item }: { item: any }) => (
         <TouchableOpacity
@@ -160,7 +163,7 @@ export default function ChatsScreen() {
                             />
                         ) : (
                             <View style={[styles.profileIcon, { borderColor: theme.borderColor }]}>
-                                <Text style={{ fontSize: wp('10%'), color: theme.text }}>👤</Text>
+                                <Text style={{ fontSize: wp(isTablet ? '8%' : '10%'), color: theme.text }}>👤</Text>
                             </View>
                         )}
                     </View>
@@ -181,40 +184,38 @@ export default function ChatsScreen() {
             </View>
         </TouchableOpacity>
     );
+
     const handleGoBack = async () => {
         console.log('Going back');
-
-        router.back();
+        router.push("/home");
     };
+
     return (
         <View style={[styles.container, { backgroundColor: theme.background }]}>
-
-                <View style={styles.innerContainer}>
-                    <View style={styles.textContainer}>
-                        <TouchableOpacity onPress={handleGoBack}>
-                            <Text style={{ color: theme.accent || '#ff00cc', fontSize: wp('6%') }}>←</Text>
-                        </TouchableOpacity>
-                        <View style={styles.header}>
-                            <Text style={[styles.headerText, { color: theme.text }]}>Chats</Text>
-                        </View>
-
+            <View style={styles.innerContainer}>
+                <View style={styles.textContainer}>
+                    <TouchableOpacity onPress={handleGoBack}>
+                        <Text style={{ color: theme.accent || '#ff00cc', fontSize: wp(isTablet ? '5%' : '6%') }}>←</Text>
+                    </TouchableOpacity>
+                    <View style={styles.header}>
+                        <Text style={[styles.headerText, { color: theme.text }]}>Chats</Text>
                     </View>
-
-                    {chats.length > 0 ? (
-                        <FlatList
-                            data={chats}
-                            renderItem={renderChatItem}
-                            keyExtractor={(item) => item.id.toString()}
-                            showsVerticalScrollIndicator={false}
-                            contentContainerStyle={{ paddingBottom: hp('2%') }}
-                        />
-                    ) : (
-                        <Text style={[styles.noChatsText, { color: theme.inputText }]}>
-                            No chats available
-                        </Text>
-                    )}
                 </View>
 
+                {chats.length > 0 ? (
+                    <FlatList
+                        data={chats}
+                        renderItem={renderChatItem}
+                        keyExtractor={(item) => item.id.toString()}
+                        showsVerticalScrollIndicator={false}
+                        contentContainerStyle={{ paddingBottom: hp(isTablet ? '1%' : '2%') }}
+                    />
+                ) : (
+                    <Text style={[styles.noChatsText, { color: theme.inputText }]}>
+                        No chats available
+                    </Text>
+                )}
+            </View>
 
             <BottomNavigation />
 

@@ -15,6 +15,7 @@ import * as ImagePicker from 'expo-image-picker';
 import { Image } from 'react-native';
 import * as FileSystem from 'expo-file-system';
 import { encode } from 'base64-arraybuffer';
+import asyncStorage from "@react-native-async-storage/async-storage/src/AsyncStorage";
 export default function ProfileScreen() {
     const { theme, toggleTheme } = useTheme();
     const { expoPushToken } = useNotification();
@@ -72,7 +73,7 @@ export default function ProfileScreen() {
     });
 
     // Доступні теми
-    const themes = ['Purple', 'Black', 'High Contrast'];
+    const themes = ['Purple', 'Black', 'Contrast'];
     const fetchImageByPath = async (path: string): Promise<string> => {
         try {
 
@@ -101,11 +102,19 @@ export default function ProfileScreen() {
                 return fileUri;
             }
         } catch (error) {
-            console.error('Помилка при обробці зображення:', error);
+            console.error('Error', error);
             throw error;
         }
     };
+    useEffect(() => {
 
+        if (params.latitude && params.longitude && params.address) {
+            setLatitude(params.latitude.toString());
+            setLongitude(params.longitude.toString());
+            setAddress(params.address.toString());
+        }
+
+    }, [params]);
     useEffect(() => {
         const loadUserData = async () => {
             try {
@@ -193,7 +202,6 @@ export default function ProfileScreen() {
                     }
                 }
 
-                // Оновлення координат і адреси з параметрів
                 if (params.latitude && params.longitude && params.address) {
                     setLatitude(params.latitude.toString());
                     setLongitude(params.longitude.toString());
@@ -206,17 +214,19 @@ export default function ProfileScreen() {
                     router.push('/sign-in');
                 } else if (error.response?.status === 403) {
                     setErrorMessage('Access denied.');
+                    await handleLogout()
                 } else if (error.response?.status === 404) {
                     setErrorMessage('User or images not found.');
                 } else {
                     setErrorMessage('Failed to load user data or images. Please try again.');
+                    router.push('/home');
                 }
                 setIsErrorPopupVisible(true);
             }
         };
         loadUserData();
-    }, [params]);
-    // Image picker handler
+    }, []);
+
     const handleImagePick = async () => {
         console.log('handleImagePick викликано');
 
@@ -321,7 +331,7 @@ export default function ProfileScreen() {
             }
         }
         if (!mode || !themes.includes(mode)) {
-            setErrorMessage('Theme must be Purple, Black, or High Contrast.');
+            setErrorMessage('Theme must be Purple, Black, or Contrast.');
             setIsErrorPopupVisible(true);
             return false;
         }
@@ -353,12 +363,12 @@ export default function ProfileScreen() {
                     name: 'profile.png',
                     type: 'image/png',
                 } as any);
-            // , {
-            //         headers: {
-            //             'Content-Type': 'multipart/form-data',
-            //         },
-            //     }
-                const response = await api.post(`/images/upload`, formData);
+
+                const response = await api.post(`/images/upload`, formData , {
+                    headers: {
+                        'Content-Type': 'multipart/form-data',
+                    },
+                });
 
                 const newImage = response.data; // PubImageDTO з id, userId, path
                 console.log('Нове зображення:', newImage);
@@ -468,6 +478,7 @@ export default function ProfileScreen() {
             if (hasChanges) {
                 setIsEditing(false);
                 await toggleTheme(mode.toLowerCase());
+                await asyncStorage.setItem("theme", mode.toLowerCase())
             } else {
                 setIsEditing(false);
             }

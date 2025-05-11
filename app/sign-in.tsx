@@ -14,8 +14,8 @@ import { init as initDB } from '@/src/db/init';
 export default function SignInScreen() {
     const { theme } = useTheme();
     const router = useRouter();
-    const [email, setEmail] = useState('roman.ganuschak2@gmail.com');
-    const [password, setPassword] = useState('Pass123');
+    const [email, setEmail] = useState('');
+    const [password, setPassword] = useState('');
     const [errorMessage, setErrorMessage] = useState('');
     const [isErrorPopupVisible, setIsErrorPopupVisible] = useState(false);
 

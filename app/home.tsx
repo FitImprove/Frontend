@@ -11,10 +11,17 @@ import BottomNavigation from '@/src/components/BottomNavigation';
 import { useRole } from '@/src/contexts/RoleContext';
 import TrainingCancelConfirm from '@/src/components/Trainings/TrainingCancelConfirm';
 import Toast from 'react-native-toast-message';
+import {api, setAuthToken} from "@/src/utils/api";
+import asyncStorage from "@react-native-async-storage/async-storage/src/AsyncStorage";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+
 
 const UPCOMING_TRAININGS_CNT = 2;
 
 export default function Home() {
+    const { theme, toggleTheme } = useTheme();
+    const [errorMessage, setErrorMessage] = useState('');
+    const [isErrorPopupVisible, setIsErrorPopupVisible] = useState(false);
     const cancelTrainingError = (e: any) => {
         Toast.show({
             type: 'error',
@@ -31,7 +38,7 @@ export default function Home() {
         });
     };
 
-    const {theme} = useTheme();
+
     const router  = useRouter();
     const {role} = useRole();
 
@@ -41,10 +48,52 @@ export default function Home() {
     const [trainingToCancel, setTrainingToCancel] = useState<Training|null>(null);
 
     async function init() {
-        const upcoming: Training[] = await getUpcomingLocal();
-        setTrainings(upcoming.slice(0, UPCOMING_TRAININGS_CNT));
-    }
+        try {
+            const upcoming: Training[] = await getUpcomingLocal();
+            setTrainings(upcoming.slice(0, UPCOMING_TRAININGS_CNT));
 
+            // Спроба отримати налаштування з бекенду
+            const response = await api.get("/settings/user");
+            console.log(response.data);
+            const newTheme = response.data.theme.toLowerCase();
+            toggleTheme(newTheme);
+            await AsyncStorage.setItem("theme", newTheme);
+        } catch (error) {
+            console.log('Error fetching settings from backend:', error);
+
+            if (error.response?.status === 401) {
+                await handleLogout();
+                router.push('/sign-in');
+            } else if (error.response?.status === 403) {
+                await handleLogout();
+                router.push('/sign-in');
+            } else if (error.response?.status === 404) {
+                setErrorMessage('User or images not found.');
+            } else {
+                setErrorMessage('Failed to load user data or images. Please try again.');
+                router.push('/home');
+            }
+            const storedTheme = await AsyncStorage.getItem("theme");
+            if (storedTheme) {
+                toggleTheme(storedTheme);
+            } else {
+
+                toggleTheme("purple");
+            }
+        }
+    }
+    async function handleLogout() {
+        try {
+            await setAuthToken('');
+            await AsyncStorage.removeItem('userId');
+            await AsyncStorage.removeItem('role');
+            router.push('/');
+        } catch (error) {
+            console.error('Error during logout:', error);
+            setErrorMessage('Failed to logout. Please try again.');
+            setIsErrorPopupVisible(true);
+        }
+    }
     useFocusEffect(
         useCallback(() => {
             init();

@@ -29,7 +29,7 @@ export default function SuggestTraining() {
     const {theme} = useTheme();
     const styles = getStyles(theme);
 
-    const { onSave } = useLocalSearchParams() as { onSave?: (data: string) => void };
+    // const { onSave } = useLocalSearchParams() as { onSave?: (data: string) => void };
 
     function onClick(user: User) {
         const index = invited.findIndex(u => u.id === user.id);
@@ -61,7 +61,7 @@ export default function SuggestTraining() {
                     {/* <Image source={{ uri: item.iconPath }} style={styles.userIcon} /> */}
                     <Text style={styles.userName}>{item.name}</Text>
                 </View>
-                <TouchableOpacity style={styles.addButton} onPress={() => onClick(item)}>
+                <TouchableOpacity style={[styles.addButton, {backgroundColor: (invited.findIndex(u => u.id === item.id) === -1 ? theme.accent : '#FF0000')}]} onPress={() => onClick(item)}>
                     <Text style={styles.addText}>{invited.findIndex(u => u.id === item.id) === -1 ? '+' : '-'}</Text>
                 </TouchableOpacity>
             </View>

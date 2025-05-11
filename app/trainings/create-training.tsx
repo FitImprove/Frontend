@@ -48,6 +48,10 @@ export default function CreateTraining() {
     const style = getStyle(theme);
     const styles = getGlobalStyle(theme);
 
+    useEffect(() => {
+        AsyncStorage.setItem('/trainings/suggest/invited', JSON.stringify([]));
+    }, []);
+
     async function createTraining() {
         console.log("Create Training Called");
         let text = validateTrainingData(training);

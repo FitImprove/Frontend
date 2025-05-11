@@ -6,6 +6,7 @@ import MapView, { Marker } from 'react-native-maps';
 import { useTheme } from '@/src/contexts/ThemeContext';
 import { widthPercentageToDP as wp } from 'react-native-responsive-screen';
 import * as Location from 'expo-location';
+import ErrorPopup from '@/src/components/ErrorPopup'; // Імпортуємо ErrorPopup
 
 export default function ViewGymScreen() {
     const { gym } = useLocalSearchParams();
@@ -26,6 +27,7 @@ export default function ViewGymScreen() {
     const [userLocation, setUserLocation] = useState<any>(null);
     const [distance, setDistance] = useState<number | null>(null);
     const [mapKey, setMapKey] = useState(0);
+    const [errorVisible, setErrorVisible] = useState(false); // Стан для попапу
 
     useEffect(() => {
         const requestLocationPermission = async () => {
@@ -52,7 +54,6 @@ export default function ViewGymScreen() {
                 };
                 setRegion(newRegion);
 
-
                 if (gymData.latitude && gymData.longitude) {
                     const gymLat = parseFloat(gymData.latitude);
                     const gymLon = parseFloat(gymData.longitude);
@@ -69,11 +70,11 @@ export default function ViewGymScreen() {
                     const calculatedDistance = R * c;
                     setDistance(calculatedDistance);
 
-
                     setMapKey(prevKey => prevKey + 1);
                 }
             } else {
                 console.log('Permission to access location was denied');
+                setErrorVisible(true); // Показуємо попап
             }
         };
 
@@ -119,6 +120,14 @@ export default function ViewGymScreen() {
                     </Text>
                 </View>
             )}
+            <ErrorPopup
+                visible={errorVisible}
+                message="Location permission denied. Please enable location access to view the gym location."
+                onClose={() => {
+                    setErrorVisible(false);
+                    router.back(); // Повертаємося назад після закриття попапу
+                }}
+            />
         </View>
     );
 }

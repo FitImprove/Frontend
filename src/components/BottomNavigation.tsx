@@ -24,6 +24,10 @@ export default function BottomNavigation() {
 
     const handleNavigation = (route: Href) => {
         router.push(route);
+<<<<<<< HEAD
+=======
+
+>>>>>>> 6d57e8042263120a556a637a88313636b4b7ca81
     };
 
     return (

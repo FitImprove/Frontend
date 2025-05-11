@@ -147,7 +147,7 @@ export default function MapSearchScreen() {
     };
 
     return (
-        <View style={styles.container}>
+        <View style={[styles.container, { backgroundColor: theme.background }]}>
             <View style={[styles.searchContainer, { backgroundColor: theme.inputContainer }]}>
                 <TextInput
                     style={{

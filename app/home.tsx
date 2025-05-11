@@ -7,10 +7,14 @@ import TrainingCard from '@/src/components/Trainings/TrainingCard';
 import TrainingAttendance from '@/src/components/Trainings/TrainingAttendence';
 import {styles} from '@/src/styles/HomeScreenStyles';
 import { useRouter, Link, useFocusEffect } from 'expo-router';
+<<<<<<< HEAD
 import BottomNavigation from '@/src/components/BottomNavigation';
 import { useRole } from '@/src/contexts/RoleContext';
 import TrainingCancelConfirm from '@/src/components/Trainings/TrainingCancelConfirm';
 import Toast from 'react-native-toast-message';
+=======
+import BottomNavigation from "@/src/components/BottomNavigation";
+>>>>>>> 6d57e8042263120a556a637a88313636b4b7ca81
 
 const UPCOMING_TRAININGS_CNT = 2;
 
@@ -83,6 +87,7 @@ export default function Home() {
                 <TrainingAttendance />
             </View>
             
+<<<<<<< HEAD
             {role === 'COACH' && 
                 <TouchableOpacity activeOpacity={0.8} onPress={() => {router.push("/trainings/create-training")}}>
                     <View
@@ -95,6 +100,16 @@ export default function Home() {
 
             {role === 'USER' && <TrainingCancelConfirm training={trainingToCancel} setTraining={setTrainingToCancel} onPress={cancelTraining} />}
             <Toast />
+=======
+            <TouchableOpacity activeOpacity={0.8} onPress={() => {router.push("/trainings/create-training")}}>
+                <View
+                    style={[styles.button, { backgroundColor: theme.buttonBackground, borderColor: theme.borderColor }]}
+                >
+                    <Text style={[styles.buttonText, { color: theme.buttonText }]}>CreateTraining</Text>
+                </View>
+            </TouchableOpacity>
+            <BottomNavigation />
+>>>>>>> 6d57e8042263120a556a637a88313636b4b7ca81
         </View>
     )
 }

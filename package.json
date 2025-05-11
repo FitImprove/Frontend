@@ -63,7 +63,8 @@
     "react-native-web": "^0.20.0",
     "react-native-webview": "13.13.5",
     "sockjs-client": "^1.6.1",
-    "stompjs": "^2.3.3"
+    "stompjs": "^2.3.3",
+    "expo-dev-client": "~5.1.8"
   },
   "devDependencies": {
     "@babel/core": "^7.25.2",

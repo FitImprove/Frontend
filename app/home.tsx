@@ -11,12 +11,13 @@ import { useRole } from '@/src/contexts/RoleContext';
 import TrainingCancelConfirm from '@/src/components/Trainings/TrainingCancelConfirm';
 import Toast from 'react-native-toast-message';
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import {api, setAuthToken} from "@/src/utils/api";
-import { registerTrainingReminderTask } from '@/src/backgroundTasks/backgroundTask';
+import {api, getRole, Role, setAuthToken} from "@/src/utils/api";
+import { registerTrainingReminderTask, BACKGROUND_NOTIFICATION_TASK } from '@/src/backgroundTasks/backgroundTask';
 import { widthPercentageToDP as wp, heightPercentageToDP as hp } from 'react-native-responsive-screen';
 import getGlobalStyle from '@/src/styles/Global';
 import { clearDatabase, TrainingUserDTO } from '@/src/db/init';
-
+import { init as initDB } from '@/src/db/init';
+import * as TaskManager from 'expo-task-manager';
 
 const UPCOMING_TRAININGS_CNT = 2;
 
@@ -42,21 +43,23 @@ export default function Home() {
         });
     };
 
-    const router  = useRouter();
+    const router = useRouter();
     const {role} = useRole();
 
     const [trainings, setTrainings] = useState<Training[]>([]);
     const [invitations, setInvitations] = useState<Training[]>([]);
     const [trainingToCancel, setTrainingToCancel] = useState<Training|null>(null);
 
-    async function init() {
-        try {
-            const upcoming: Training[] = await getUpcomingLocal();
-            setTrainings(upcoming.slice(0, UPCOMING_TRAININGS_CNT));
-            if (role === 'USER')
-                setInvitations(await getInvitationsLocal());
+    async function _init() {
+        const role = (await getRole()) || 'USER';
+        await initDB(role as Role);
+        const upcoming: Training[] = await getUpcomingLocal();
+        console.log("Upcoming: ", upcoming);
+        setTrainings(upcoming.slice(0, UPCOMING_TRAININGS_CNT));
+    }
 
-            console.log(await AsyncStorage.getItem('token'));
+    async function initSettings() {
+        try {
             // Спроба отримати налаштування з бекенду
             const response = await api.get("/settings/user");
             console.log(response.data);
@@ -82,11 +85,28 @@ export default function Home() {
             if (storedTheme) {
                 toggleTheme(storedTheme);
             } else {
-
                 toggleTheme("purple");
             }
         }
     }
+
+    useEffect(() => {
+        async function q() {
+            _init();
+            initSettings();
+            await registerTrainingReminderTask();
+            // await TaskManager. (BACKGROUND_NOTIFICATION_TASK);
+        } 
+    }, []);
+
+    async function init() {
+        const upcoming: Training[] = await getUpcomingLocal();
+        console.log("Upcoming: ", upcoming);
+        setTrainings(upcoming.slice(0, UPCOMING_TRAININGS_CNT));
+        if (role === 'USER')
+            setInvitations(await getInvitationsLocal());
+    }
+
     async function handleLogout() {
         try {
             await setAuthToken('');
@@ -103,7 +123,6 @@ export default function Home() {
     useFocusEffect(
         useCallback(() => {
             init();
-            registerTrainingReminderTask();
             return () => {};
         }, [])
     );

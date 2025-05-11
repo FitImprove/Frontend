@@ -7,6 +7,7 @@ const RoleContext = createContext<any>(null);
 
 export const RoleProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
     const [role, _setRole] = useState<Role>('USER');
+    const [update, setUpdate] = useState<number>(0);
 
     useFocusEffect(
         useCallback(() => {
@@ -32,7 +33,7 @@ export const RoleProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
 
     return (
-        <RoleContext.Provider value={{ role, setRole }}>
+        <RoleContext.Provider value={{ role, setRole, update, setUpdate }}>
             {children}
         </RoleContext.Provider>
     );

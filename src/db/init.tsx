@@ -39,10 +39,10 @@ export async function init(userRole: Role) {
     console.log("InitDB called");
 
     const db = await getDB();
-    await db.execAsync(`
-        DROP TABLE IF EXISTS training_user;
-        DROP TABLE IF EXISTS trainings;
-    `);
+    // await db.execAsync(`
+    //     DROP TABLE IF EXISTS trainings;
+    //     DROP TABLE IF EXISTS training_user;
+    // `)
     await db.execAsync(`
         CREATE TABLE IF NOT EXISTS trainings (
             id INTEGER PRIMARY KEY,

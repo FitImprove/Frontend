@@ -5,10 +5,11 @@ import { api } from '@/src/utils/api';
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import * as Notifications from 'expo-notifications';
 
-const BACKGROUND_NOTIFICATION_TASK = 'training-reminder-task';
+export const BACKGROUND_NOTIFICATION_TASK = 'training-reminder-task';
 
 TaskManager.defineTask(BACKGROUND_NOTIFICATION_TASK, async () => {
     try {
+        console.log("Background process started");
         const userId = await AsyncStorage.getItem('userId');
         if (!userId) {
             console.log('User not logged in');
@@ -44,17 +45,18 @@ export const registerTrainingReminderTask = async () => {
         const isRegistered = await TaskManager.isTaskRegisteredAsync(BACKGROUND_NOTIFICATION_TASK);
         if (!isRegistered) {
             await BackgroundFetch.registerTaskAsync(BACKGROUND_NOTIFICATION_TASK, {
-                minimumInterval: 15 * 60,
+                minimumInterval: 15 * 60, // 15 minutes
                 stopOnTerminate: false,
                 startOnBoot: true,
             });
             console.log('Training reminder task registered');
+        } else {
+            console.log('Task already registered');
         }
     } catch (error) {
         console.log('Failed to register background task:', error);
     }
 };
-
 
 export const unregisterTrainingReminderTask = async () => {
     try {

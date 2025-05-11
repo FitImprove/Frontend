@@ -44,11 +44,12 @@ const monthNames = [
 ];
 
 async function getTrainings(year: number, month: number): Promise<Training[]> {
-  let start = new Date(year, month, 1);
-  let end = new Date(year, month, 1);
-  end.setMonth(end.getMonth() + 1);
-  
-  return getTrainignsInInterval(start, end);
+    let start = new Date(year, month, 1);
+    let end = new Date(year, month, 1);
+    end.setMonth(end.getMonth() + 1);
+    end = new Date(Math.min(end.getTime(), (new Date()).getTime()));
+    
+    return getTrainignsInInterval(start, end);
 }
 
 const TrainingMonthGrid: React.FC<TrainingCalendarProps> = ({ year, month, selectDay }) => {
@@ -88,7 +89,7 @@ const TrainingMonthGrid: React.FC<TrainingCalendarProps> = ({ year, month, selec
                   onPress={() => selectDay(_trainings || [], getDate(rowIdx, colIdx))}
                   style={[
                     styles.cell,
-                    {backgroundColor:  _trainings == null ? 'transparent' : _trainings.length ? theme.inputBackground : theme.buttonBackground},
+                    {backgroundColor:  _trainings == null ? 'transparent' : _trainings.length ? '#1C3AFF' : theme.buttonBackground},
                   ]}
                 />
               );

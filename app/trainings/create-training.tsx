@@ -1,7 +1,7 @@
 import { View, Text, StyleSheet, ViewStyle, TextStyle, TextInput, TouchableOpacity, Modal, KeyboardAvoidingView, ScrollView, Platform } from 'react-native';
 import { Theme, useTheme } from '@/src/contexts/ThemeContext';
 import { useEffect, useState } from 'react';
-import { useLocalSearchParams, useRouter } from 'expo-router';
+import { router, useLocalSearchParams, useRouter } from 'expo-router';
 import { heightPercentageToDP as hp, widthPercentageToDP as wp } from 'react-native-responsive-screen';
 import RNPickerSelect, { PickerStyle } from 'react-native-picker-select';
 import Toast from 'react-native-toast-message';
@@ -13,6 +13,8 @@ import { Training } from '@/src/utils/training';
 import TrainingDataInput, { validateTrainingData } from '@/src/components/Trainings/TrainingDataInput';
 import getGlobalStyle from '@/src/styles/Global';
 import { createTraining as createTrainignFull } from '@/src/utils/training';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { User } from './suggest-training';
 
 export default function CreateTraining() {
     const incorrectTrainingData = (message: string) => {
@@ -41,7 +43,6 @@ export default function CreateTraining() {
     };
 
     const [training, setTraining] = useState<Training>(emptyTraining);
-    const [invited, setInvited] = useState<UserForTrainingDTO[]>([]);
 
     const { theme } = useTheme();
     const style = getStyle(theme);
@@ -55,9 +56,15 @@ export default function CreateTraining() {
             return;
         }
         console.log("Passed");
+        let invited: User[] = [];
+        const stored = await AsyncStorage.getItem('/trainings/suggest/invited');
+        if (stored) {
+            invited = JSON.parse(stored) || [];
+        }
         try {
-            await createTrainignFull(training);
+            await createTrainignFull(training, invited.map(i => i.id));
             createTrainingSuccess();
+            await AsyncStorage.setItem('/trainings/suggest/invited', JSON.stringify([]));
         } catch (e) {
             createTrainingError(e);
         }
@@ -80,7 +87,7 @@ export default function CreateTraining() {
                 <TouchableOpacity activeOpacity={0.8} onPress={createTraining} style={[styles.button, {width: wp('50%')}]}>
                     <Text style={styles.buttonText}>Create</Text>
                 </TouchableOpacity>
-                <TouchableOpacity activeOpacity={0.8} onPress={() => console.log(true)} style={[styles.button, {width: wp('50%'), marginTop: hp("1%")}]}>
+                <TouchableOpacity activeOpacity={0.8} onPress={() => router.push('/trainings/suggest-training')} style={[styles.button, {width: wp('50%'), marginTop: hp("1%")}]}>
                     <Text style={styles.buttonText}>Suggest Training</Text>
                 </TouchableOpacity>
                 <Toast />

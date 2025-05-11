@@ -32,6 +32,7 @@ export default function ViewEnrolled() {
     const { id, title } = useLocalSearchParams();
     const [enrolled, setEnrolled] = useState<UserForTrainingDTO[]>([]);
     const styles = getStyle(theme);
+    const router = useRouter();
 
     useFocusEffect(
         useCallback(() => {
@@ -68,7 +69,10 @@ export default function ViewEnrolled() {
 
     function openProfile(userId: number) {
         console.log("OpenProfile");
-        // ToDo!
+        router.push({
+            pathname: '/view-profile',
+            params: { userId },
+        });
     } 
 
     if (enrolled.length === 0) {

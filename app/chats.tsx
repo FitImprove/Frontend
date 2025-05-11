@@ -81,7 +81,6 @@ export default function ChatsScreen() {
                     const response = await api.get(endpoint);
                     const chatData = response.data || [];
 
-
                     const updatedChats = await Promise.all(
                         chatData.map(async (chat: any) => {
                             const participantId = storedRole === 'COACH' ? chat.regularUser?.id : chat.coach?.id;

@@ -5,13 +5,16 @@ import { Training, shortDaysOfWeek } from '../../utils/training';
 import { router } from 'expo-router';
 import { useRole } from '@/src/contexts/RoleContext';
 import TrainingCancelConfirm from './TrainingCancelConfirm';
+import { Theme, useTheme } from '@/src/contexts/ThemeContext';
 
 interface Props {
     training: Training;
     onDelete: (training: Training) => void;
+    onInvite?: (training: Training) => void;
+    isInvitation?: boolean;
 }
 
-function TrainingCard({training, onDelete}: Props) {
+function TrainingCard({training, onDelete, onInvite = (t: Training) => {console.log("Unhandled invite")}, isInvitation = false}: Props) {
     const t = training.time;
     const startMinutes = t.getMinutes().toString().padStart(2, "0");
     const end_t = new Date(t.getTime() + training.duration * 60000);
@@ -30,6 +33,9 @@ function TrainingCard({training, onDelete}: Props) {
             params: {id: training.id}
         });
     }
+
+    const {theme} = useTheme();
+    const styles = getStyle(theme);
 
     return (
     <View style={styles.card}>
@@ -52,18 +58,25 @@ function TrainingCard({training, onDelete}: Props) {
               ? <TouchableOpacity onPress={onEdit}>
                   <FontAwesome name="edit" size={28} color="black" style={styles.trashIcon} />
               </TouchableOpacity>
-              : <TouchableOpacity onPress={() => onDelete(training)}>
-                  <FontAwesome name="trash" size={28} color="black" style={styles.trashIcon} />
-              </TouchableOpacity>}
+              : (!isInvitation ? <TouchableOpacity onPress={() => onDelete(training)}>
+                    <FontAwesome name="trash" size={28} color="black" style={styles.trashIcon} />
+                </TouchableOpacity> : <>
+                    <TouchableOpacity onPress={() => onInvite(training)}>
+                      <FontAwesome name="check-circle" size={28} color="black" style={styles.trashIcon} />
+                    </TouchableOpacity>
+                    <TouchableOpacity onPress={() => onDelete(training)}>
+                      <FontAwesome name="trash" size={28} color="black" style={styles.trashIcon} />
+                    </TouchableOpacity>
+                  </>)}
         </View>
     </View>
     );
 };
 
-export const styles = StyleSheet.create({
+export const getStyle = (theme: Theme) => {return StyleSheet.create({
   card: {
     flexDirection: 'row',
-    backgroundColor: '#B025F2',
+    backgroundColor: theme.buttonBackground,
     padding: 15,
     margin: 10,
     borderRadius: 15,
@@ -114,6 +127,6 @@ export const styles = StyleSheet.create({
   trashIcon: {
     marginTop: 10,
   },
-});
+})};
 
 export default TrainingCard;

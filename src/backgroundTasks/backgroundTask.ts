@@ -3,12 +3,12 @@ import * as TaskManager from 'expo-task-manager';
 import { getUpcomingLocal, Training } from '@/src/utils/training';
 import { api } from '@/src/utils/api';
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import * as Notifications from 'expo-notifications';
 
 const BACKGROUND_NOTIFICATION_TASK = 'training-reminder-task';
 
 TaskManager.defineTask(BACKGROUND_NOTIFICATION_TASK, async () => {
     try {
-        // Отримуємо userId з AsyncStorage
         const userId = await AsyncStorage.getItem('userId');
         if (!userId) {
             console.log('User not logged in');
@@ -16,24 +16,22 @@ TaskManager.defineTask(BACKGROUND_NOTIFICATION_TASK, async () => {
         }
 
         const upcomingTrainings: Training[] = await getUpcomingLocal();
+        if (!upcomingTrainings || upcomingTrainings.length === 0) 
+            return BackgroundFetch.BackgroundFetchResult.Failed;
         const now = new Date();
         const oneHourLater = new Date(now.getTime() + 60 * 60 * 1000);
-
-        const nextTraining = upcomingTrainings.find((training) => {
-            const trainingTime = new Date(training.time);
-            return trainingTime > now && trainingTime <= oneHourLater && !training.isCanceled;
-        });
-
-        if (nextTraining) {
-            await api.post('/notifications/send', {
-                userId: parseInt(userId),
+        const training = upcomingTrainings[0];
+        if (!(training.time > now && training.time < oneHourLater))
+            return BackgroundFetch.BackgroundFetchResult.Failed;
+        
+        await Notifications.scheduleNotificationAsync({
+            content: {
                 title: 'Upcoming Training!',
-                message: `Your training "${nextTraining.title}" starts in 1 hour at ${new Date(nextTraining.time).toLocaleTimeString()}.`,
-                trainingId: nextTraining.id,
-            });
-            console.log('Notification sent for training:', nextTraining.title);
-        }
-
+                body: `Your training "${training.title}" starts in 1 hour at ${new Date(training.time).toLocaleTimeString()}.`,
+                data: { trainingId: training.id },
+            },
+            trigger: null
+        });
         return BackgroundFetch.BackgroundFetchResult.NewData;
     } catch (error) {
         console.log('Background task error:', error);

@@ -2,6 +2,7 @@ import React, { createContext, useContext, useState, useEffect, useRef, ReactNod
 import * as Notifications from "expo-notifications";
 import { EventSubscription } from "expo-notifications";
 import {registrateForPushNotifications} from "@/src/utils/registerPushNotification";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 interface NotificationContextType {
     expoPushToken: string | null;
@@ -52,6 +53,12 @@ export const NotificationProvider: React.FC<NotificationProviderProps> = ({ chil
         // backround tap on notification
         responseListener.current =
             Notifications.addNotificationResponseReceivedListener((response) => {
+                const data = response.notification.request.content.data;
+                if (data && data.trainingId) {
+                    const trainingKey = `notification_seen_${data.trainingId}`;
+                    AsyncStorage.setItem(trainingKey, 'true');
+                }
+
                 console.log(
                     "🔔 Notification Response: ",
                     JSON.stringify(response, null, 2),

@@ -40,10 +40,15 @@ export async function init(userRole: Role) {
 
     const db = await getDB();
     await db.execAsync(`
+        DROP TABLE IF EXISTS training_user;
+        DROP TABLE IF EXISTS trainings;
+    `);
+    await db.execAsync(`
         CREATE TABLE IF NOT EXISTS trainings (
             id INTEGER PRIMARY KEY,
             title varchar not null,
             description varchar not null,
+            type varchar not null,
             free_slots integer not null,
             for_type varchar not null,
             time timestamp not null,
@@ -79,10 +84,10 @@ export async function init(userRole: Role) {
     //     else 
     //         await syncDBUser(new Date(trainingUpdateTime), db);
     // } else {
-        // if (userType === 'COACH') 
-        //     await initDataCoach(db);
-        // else
-        //     await initDataRegularuser(db);
+    //     if (userType === 'COACH') 
+    //         await initDataCoach(db);
+    //     else
+    //         await initDataRegularuser(db);
     // }
     // await AsyncStorage.setItem('trainingUpdateTime', time.toISOString());
 }
@@ -115,7 +120,7 @@ async function initDataRegularuser(db: SQLite.SQLiteDatabase) {
 async function initDataCoach(db: SQLite.SQLiteDatabase) {
     try {
         let trainigns = (await api.get<TrainingDTO[]>("/trainings/all-trainings-coach")).data;
-        await db.execAsync("DROP TABLE IF EXISTS trainings;");
+        await clearDatabase();
         for (const t of trainigns) {
             await insertTraining(t);
         }
@@ -141,8 +146,8 @@ export async function clearDatabase() {
 
 const insertTrainingSQL = `INSERT OR REPLACE INTO trainings (
             id, title, description, free_slots, for_type, time, duration, is_canceled,
-            created_at, coach_name, gym_name, coach_id
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`;
+            created_at, coach_name, gym_name, coach_id, type
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`;
 export async function insertTraining(t: TrainingDTO) {
     const db = await getDB();
     try {
@@ -161,6 +166,7 @@ export async function insertTraining(t: TrainingDTO) {
                 t.coachName,
                 t.gymName,
                 t.coachId,
+                t.type
             ]
         );
     } catch (e) {console.log(e)}

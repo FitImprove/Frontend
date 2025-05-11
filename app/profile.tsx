@@ -352,16 +352,19 @@ export default function ProfileScreen() {
             let hasChanges = false;
             if (profileImage && profileImage.startsWith('file://')) {
                 // Видалення старого зображення, якщо воно єї
+                console.log("Byte");
+
                 if (imageDescriptors.length > 0) {
                     console.log(imageDescriptors[0].id);
                     await api.delete(`/images/del/${imageDescriptors[0].id}`);
                 }
+                console.log("Byte1");
 
                 const formData = new FormData();
                 formData.append('file', {
                     uri: profileImage,
                     name: 'profile.png',
-                    type: 'image/png',
+                    type: 'image/png'
                 } as any);
 
                 const response = await api.post(`/images/upload`, formData , {

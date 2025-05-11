@@ -171,9 +171,14 @@ export default function ProfileViewScreen() {
 
             let chatId;
             if (!chatExists) {
-                const createResponse = await api.post('/chats/create', {}, {
-                    params: { coachId: profile?.id }
-                });
+                // const createResponse = await api.post('/chats/create', {}, {
+                //     params: { coachId: profile?.id }
+                // });
+                // chatId = createResponse.data.id;
+                const createParams = currentUserRole === 'COACH'
+                    ? { regularUserId: profile?.id }
+                    : { coachId: profile?.id };
+                const createResponse = await api.post('/chats/create', {}, { params: createParams });
                 chatId = createResponse.data.id;
             } else {
                 const endpoint = currentUserRole === 'COACH' ? '/chats/coach' : '/chats/user';

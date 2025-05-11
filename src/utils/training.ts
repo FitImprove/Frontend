@@ -6,9 +6,9 @@ import qs from 'qs';
 export const daysOfWeek = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
 export const shortDaysOfWeek = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 export enum TrainingStatus {
-    INVITED = "INVITED", 
-    AGREED = "AGREED", 
-    DENIED = "DENIED", 
+    INVITED = "INVITED",
+    AGREED = "AGREED",
+    DENIED = "DENIED",
     CANCELED = "CANCELED"
 }
 
@@ -17,10 +17,10 @@ export enum TrainingType {
     LIMITED = "LIMITED"
 }
 export function getTrainingType(type: String): TrainingType {
-    if (type === "EVERYONE") 
+    if (type === "EVERYONE")
         return TrainingType.EVERYONE;
-    // if (type === "LIMITED") 
-        return TrainingType.LIMITED;
+    // if (type === "LIMITED")
+    return TrainingType.LIMITED;
     // return undefined;
 }
 

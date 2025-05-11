@@ -10,7 +10,7 @@ import { init as initDB } from '@/src/db/init';
 import {NotificationProvider} from "@/src/contexts/Notification";
 import { RoleProvider, useRole } from '@/src/contexts/RoleContext';
 
-
+Notifications.requestPermissionsAsync();
 Notifications.setNotificationHandler({
     handleNotification: async () => ({
         shouldPlaySound: true,

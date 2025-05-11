@@ -23,6 +23,7 @@
     "base64-arraybuffer": "^1.0.2",
     "buffer": "^6.0.3",
     "expo": "~53.0.7",
+    "expo-background-fetch": "~13.1.5",
     "expo-blur": "~14.1.4",
     "expo-constants": "~17.1.5",
     "expo-device": "~7.1.4",
@@ -59,7 +60,8 @@
     "react-native-web": "^0.20.0",
     "react-native-webview": "13.13.5",
     "sockjs-client": "^1.6.1",
-    "stompjs": "^2.3.3"
+    "stompjs": "^2.3.3",
+    "expo-task-manager": "~13.1.5"
   },
   "devDependencies": {
     "@babel/core": "^7.25.2",

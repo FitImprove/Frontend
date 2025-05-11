@@ -12,7 +12,7 @@ import { useRole } from '@/src/contexts/RoleContext';
 import TrainingCancelConfirm from '@/src/components/Trainings/TrainingCancelConfirm';
 import Toast from 'react-native-toast-message';
 import {api, setAuthToken} from "@/src/utils/api";
-import asyncStorage from "@react-native-async-storage/async-storage/src/AsyncStorage";
+import { registerTrainingReminderTask } from '@/src/backgroundTasks/backgroundTask';
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
 
@@ -97,6 +97,7 @@ export default function Home() {
     useFocusEffect(
         useCallback(() => {
             init();
+            registerTrainingReminderTask();
             return () => {};
         }, [])
     );

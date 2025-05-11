@@ -465,8 +465,7 @@ export default function ProfileScreen() {
                     hasChanges = true;
                 }
             }
-            //
-            // Закоментований запит для нотифікацій
+
             if (expoPushToken) {
                 console.log(expoPushToken);
                 await api.put('/users/notifications', {

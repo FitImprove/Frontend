@@ -12,11 +12,13 @@ import TrainingCancelConfirm from '@/src/components/Trainings/TrainingCancelConf
 import Toast from 'react-native-toast-message';
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { api, setAuthToken } from "@/src/utils/api";
-import { registerTrainingReminderTask } from '@/src/backgroundTasks/backgroundTask';
+import { registerTrainingReminderTask, BACKGROUND_NOTIFICATION_TASK } from '@/src/backgroundTasks/backgroundTask';
 import { widthPercentageToDP as wp, heightPercentageToDP as hp } from 'react-native-responsive-screen';
 import getGlobalStyle from '@/src/styles/Global';
 import { clearDatabase, TrainingUserDTO } from '@/src/db/init';
 import { styles as profileStyles } from "@/src/styles/ProfileStyles";
+import * as BackgroundFetch from 'expo-background-fetch';
+
 
 const UPCOMING_TRAININGS_CNT = 2;
 
@@ -78,6 +80,11 @@ export default function Home() {
         useCallback(() => {
             init();
             registerTrainingReminderTask();
+            const testBackgroundTask = async () => {
+                const result = await BackgroundFetch.performFetchAsync(BACKGROUND_NOTIFICATION_TASK);
+                console.log('Manual background task result:', result);
+            };
+            testBackgroundTask();
             return () => {};
         }, [])
     );
@@ -99,11 +106,6 @@ export default function Home() {
                 } else if (error.response?.status === 403) {
                     await handleLogout();
                     router.push('/sign-in');
-                } else if (error.response?.status === 404) {
-                    setErrorMessage('User or images not found.');
-                } else {
-                    setErrorMessage('Failed to load user data or images. Please try again.');
-                    router.push('/home');
                 }
                 const storedTheme = await AsyncStorage.getItem("theme");
                 if (storedTheme) {
@@ -147,6 +149,7 @@ export default function Home() {
     // Функція для рендерингу TrainingCard у FlatList для планшетів (для trainings)
     const renderTrainingCard = ({ item, index }: { item: Training; index: number }) => (
         <View style={{ width: '49%' }}> {/* Максимально широкі колонки без відступів */}
+
             <TrainingCard
                 key={index}
                 training={item}

@@ -5,8 +5,8 @@ import { api } from '@/src/utils/api';
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import * as Notifications from 'expo-notifications';
 
-const BACKGROUND_NOTIFICATION_TASK = 'training-reminder-task';
-
+// const BACKGROUND_NOTIFICATION_TASK = 'training-reminder-task';
+export const BACKGROUND_NOTIFICATION_TASK = 'training-reminder-task';
 TaskManager.defineTask(BACKGROUND_NOTIFICATION_TASK, async () => {
     try {
         const userId = await AsyncStorage.getItem('userId');
@@ -14,7 +14,7 @@ TaskManager.defineTask(BACKGROUND_NOTIFICATION_TASK, async () => {
             console.log('User not logged in');
             return BackgroundFetch.BackgroundFetchResult.Failed;
         }
-
+        console.log("Som tu");
         const upcomingTrainings: Training[] = await getUpcomingLocal();
         if (!upcomingTrainings || upcomingTrainings.length === 0) 
             return BackgroundFetch.BackgroundFetchResult.Failed;
@@ -32,6 +32,7 @@ TaskManager.defineTask(BACKGROUND_NOTIFICATION_TASK, async () => {
             },
             trigger: null
         });
+        console.log("Notification send")
         return BackgroundFetch.BackgroundFetchResult.NewData;
     } catch (error) {
         console.log('Background task error:', error);

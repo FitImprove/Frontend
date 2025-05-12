@@ -49,7 +49,9 @@ function TrainingCard({training, onDelete, onInvite = (t: Training) => {console.
         </View>
         <View style={styles.divider} />
         <View style={styles.infoSection}>
-            <Text style={styles.title}>Training {`${t.getHours()}:${startMinutes}-${end_t.getHours()}:${endMinutes}`}</Text>
+            <Text style={styles.title}>
+                Training {t && end_t ? `${t.getHours().toString().padStart(2, "0")}:${startMinutes}-${end_t.getHours().toString().padStart(2, "0")}:${endMinutes}` : "Time N/A"}
+            </Text>
             <Text style={styles.subtitle}>With {training.coachName}</Text>
             <Text style={styles.subtitle}>Gym: {training.gymName}</Text>
         </View>

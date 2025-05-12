@@ -5,16 +5,18 @@ import { api } from '@/src/utils/api';
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import * as Notifications from 'expo-notifications';
 
-const BACKGROUND_NOTIFICATION_TASK = 'training-reminder-task';
+export const BACKGROUND_NOTIFICATION_TASK = 'training-reminder-task';
 
 TaskManager.defineTask(BACKGROUND_NOTIFICATION_TASK, async () => {
     try {
+        console.log("Background process started");
+
+        /*
         const userId = await AsyncStorage.getItem('userId');
         if (!userId) {
             console.log('User not logged in');
             return BackgroundFetch.BackgroundFetchResult.Failed;
         }
-
         const upcomingTrainings: Training[] = await getUpcomingLocal();
         if (!upcomingTrainings || upcomingTrainings.length === 0) 
             return BackgroundFetch.BackgroundFetchResult.Failed;
@@ -23,12 +25,13 @@ TaskManager.defineTask(BACKGROUND_NOTIFICATION_TASK, async () => {
         const training = upcomingTrainings[0];
         if (!(training.time > now && training.time < oneHourLater))
             return BackgroundFetch.BackgroundFetchResult.Failed;
-        
+        */
         await Notifications.scheduleNotificationAsync({
             content: {
                 title: 'Upcoming Training!',
-                body: `Your training "${training.title}" starts in 1 hour at ${new Date(training.time).toLocaleTimeString()}.`,
-                data: { trainingId: training.id },
+                body: `It facking works`,
+                // body: `Your training "${training.title}" starts in 1 hour at ${new Date(training.time).toLocaleTimeString()}.`,
+                // data: { trainingId: training.id },
             },
             trigger: null
         });
@@ -42,19 +45,22 @@ TaskManager.defineTask(BACKGROUND_NOTIFICATION_TASK, async () => {
 export const registerTrainingReminderTask = async () => {
     try {
         const isRegistered = await TaskManager.isTaskRegisteredAsync(BACKGROUND_NOTIFICATION_TASK);
+        console.log(`BackProcRegistration: ${isRegistered}`);
         if (!isRegistered) {
+            console.log("Training is not registrated, registrating it");
             await BackgroundFetch.registerTaskAsync(BACKGROUND_NOTIFICATION_TASK, {
-                minimumInterval: 15 * 60,
+                minimumInterval: 15 * 60, // 15 minutes
                 stopOnTerminate: false,
                 startOnBoot: true,
             });
             console.log('Training reminder task registered');
+        } else {
+            console.log('Task already registered');
         }
     } catch (error) {
         console.log('Failed to register background task:', error);
     }
 };
-
 
 export const unregisterTrainingReminderTask = async () => {
     try {

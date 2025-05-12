@@ -39,10 +39,10 @@ export async function init(userRole: Role) {
     console.log("InitDB called");
 
     const db = await getDB();
-    await db.execAsync(`
-        DROP TABLE IF EXISTS training_user;
-        DROP TABLE IF EXISTS trainings;
-    `);
+    // await db.execAsync(`
+    //     DROP TABLE IF EXISTS trainings;
+    //     DROP TABLE IF EXISTS training_user;
+    // `)
     await db.execAsync(`
         CREATE TABLE IF NOT EXISTS trainings (
             id INTEGER PRIMARY KEY,
@@ -90,6 +90,20 @@ export async function init(userRole: Role) {
     //         await initDataRegularuser(db);
     // }
     // await AsyncStorage.setItem('trainingUpdateTime', time.toISOString());
+}
+
+export async function updateDB(userRole: Role): Promise<boolean> {
+    const db = await getDB();
+
+    const storedTime = await AsyncStorage.getItem('trainingUpdateTime');
+    const updateTime = storedTime ? new Date(storedTime) : new Date();
+    const now = new Date();
+    let res = false;
+    if (userRole === 'COACH')
+        await syncDBCoach(updateTime, db);
+    else await syncDBUser(updateTime, db);
+    await AsyncStorage.setItem('trainingUpdateTime', now.toISOString());
+    return res;
 }
 
 async function initDataRegularuser(db: SQLite.SQLiteDatabase) {
@@ -211,7 +225,7 @@ export async function insertTrainingUsers(tus: TrainingUserDTO[]) {
     }
 }
 
-async function syncDBCoach(_updateTime: Date, db: SQLite.SQLiteDatabase) {
+async function syncDBCoach(_updateTime: Date, db: SQLite.SQLiteDatabase): Promise<boolean> {
     const updateTime = _updateTime.toISOString().slice(0, 19);
     const resp = await api.get<TrainingDTO[]>('/trainings/updates-coach', {
         params: { time: updateTime }
@@ -224,9 +238,10 @@ async function syncDBCoach(_updateTime: Date, db: SQLite.SQLiteDatabase) {
             console.log(`Error updating training ${t.id}:`, e);
         }
     }
+    return resp.data.length !== 0;
 }
 
-async function syncDBUser(_updateTime: Date, db: SQLite.SQLiteDatabase) {
+async function syncDBUser(_updateTime: Date, db: SQLite.SQLiteDatabase): Promise<boolean> {
     const updateTime = _updateTime.toISOString().slice(0, 19);
     api.get<TrainingDTO[]>('/trainings/updates', {
         params: { time: updateTime }
@@ -248,6 +263,8 @@ async function syncDBUser(_updateTime: Date, db: SQLite.SQLiteDatabase) {
     }).catch(e => {
         console.log("Error while updating training-user: ", e);
     });
+
+    return true;
 }
 
 export async function clearTrainings() {

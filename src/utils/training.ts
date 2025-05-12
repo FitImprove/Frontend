@@ -13,7 +13,7 @@ export enum TrainingStatus {
 }
 
 const pad = (n: number) => n.toString().padStart(2, '0');
-const localISOString = (date: Date) => {
+export const localISOString = (date: Date) => {
     return date.getFullYear() +
         '-' + pad(date.getMonth() + 1) +
         '-' + pad(date.getDate()) +

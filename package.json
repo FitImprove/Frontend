@@ -27,6 +27,7 @@
     "expo-background-task": "^0.2.7",
     "expo-blur": "~14.1.4",
     "expo-constants": "~17.1.5",
+    "expo-dev-client": "~5.1.8",
     "expo-device": "~7.1.4",
     "expo-file-system": "~18.1.9",
     "expo-font": "~13.3.1",
@@ -53,6 +54,7 @@
     "react-native-image-picker": "^8.2.1",
     "react-native-linear-gradient": "^2.8.3",
     "react-native-maps": "^1.20.1",
+    "react-native-paper": "^5.14.1",
     "react-native-picker-select": "^9.3.1",
     "react-native-reanimated": "~3.17.4",
     "react-native-responsive-screen": "^1.4.2",
@@ -63,8 +65,7 @@
     "react-native-web": "^0.20.0",
     "react-native-webview": "13.13.5",
     "sockjs-client": "^1.6.1",
-    "stompjs": "^2.3.3",
-    "expo-dev-client": "~5.1.8"
+    "stompjs": "^2.3.3"
   },
   "devDependencies": {
     "@babel/core": "^7.25.2",

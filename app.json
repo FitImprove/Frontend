@@ -1,7 +1,7 @@
 {
   "expo": {
     "name": "frontend",
-    "slug": "frontend",
+    "slug": "fitimprove",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
@@ -19,7 +19,9 @@
       },
       "package": "dev.expo.fitimprove",
       "googleServicesFile": "google-services.json",
-      "permissions": ["RECEIVE_BOOT_COMPLETED"]
+      "permissions": [
+        "RECEIVE_BOOT_COMPLETED"
+      ]
     },
     "web": {
       "bundler": "metro",
@@ -48,7 +50,7 @@
         "origin": false
       },
       "eas": {
-        "projectId": "cbbd0fcd-8949-47f0-8fe5-a34274680ab4"
+        "projectId": "1acbb7fb-e8c9-421f-bd8a-ddbf2d3a72da"
       }
     },
     "backgroundFetch": {
@@ -57,6 +59,6 @@
       "stopOnTerminate": false,
       "startOnBoot": true
     },
-    "owner": "fitimprove"
+    "owner": "firimprove"
   }
 }

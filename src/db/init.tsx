@@ -92,6 +92,18 @@ export async function init(userRole: Role) {
     // await AsyncStorage.setItem('trainingUpdateTime', time.toISOString());
 }
 
+export async function updateDB(userRole: Role) {
+    const db = await getDB();
+
+    const storedTime = await AsyncStorage.getItem('trainingUpdateTime');
+    const updateTime = storedTime ? new Date(storedTime) : new Date();
+    const now = new Date();
+    if (userRole === 'COACH')
+        await syncDBCoach(updateTime, db);
+    else await syncDBUser(updateTime, db);
+    await AsyncStorage.setItem('trainingUpdateTime', now.toISOString());
+}
+
 async function initDataRegularuser(db: SQLite.SQLiteDatabase) {
     try {
         const time = new Date();

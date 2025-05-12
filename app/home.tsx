@@ -1,4 +1,4 @@
-import { View, Text, TouchableOpacity, StyleSheet, ScrollView, Dimensions, FlatList } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, ScrollView, Dimensions, FlatList, Pressable } from 'react-native';
 import { Theme, useTheme } from '@/src/contexts/ThemeContext';
 import WaveBackground from "@/src/components/WaveBackground";
 import { useCallback, useEffect, useState } from 'react';
@@ -15,10 +15,10 @@ import { api, getRole, Role, setAuthToken } from "@/src/utils/api";
 import { registerTrainingReminderTask, BACKGROUND_NOTIFICATION_TASK } from '@/src/backgroundTasks/backgroundTask';
 import { widthPercentageToDP as wp, heightPercentageToDP as hp } from 'react-native-responsive-screen';
 import getGlobalStyle from '@/src/styles/Global';
-import { clearDatabase, TrainingUserDTO } from '@/src/db/init';
+import { clearDatabase, TrainingUserDTO, updateDB } from '@/src/db/init';
 import { styles as profileStyles } from "@/src/styles/ProfileStyles";
 import { init as initDB } from '@/src/db/init';
-import * as TaskManager from 'expo-task-manager';
+import * as BackgroundFetch from 'expo-background-fetch';
 
 const UPCOMING_TRAININGS_CNT = 2;
 
@@ -78,11 +78,6 @@ export default function Home() {
             } else if (error.response?.status === 403) {
                 await handleLogout();
                 router.push('/sign-in');
-            } else if (error.response?.status === 404) {
-                setErrorMessage('User or images not found.');
-            } else {
-                setErrorMessage('Failed to load user data or images. Please try again.');
-                router.push('/home');
             }
             const storedTheme = await AsyncStorage.getItem("theme");
             if (storedTheme) {
@@ -98,13 +93,19 @@ export default function Home() {
             _init();
             initSettings();
             await registerTrainingReminderTask();
-            // await TaskManager. (BACKGROUND_NOTIFICATION_TASK);
-        } 
+            const testBackgroundTask = async () => {
+                const result = await BackgroundFetch.performFetchAsync(BACKGROUND_NOTIFICATION_TASK);    
+                console.log('Manual background task result:', result);
+            };testBackgroundTask();
+        }
+        q();
     }, []);
 
     async function init() {
+        await updateDB(role);
+
         const upcoming: Training[] = await getUpcomingLocal();
-        console.log("Upcoming: ", upcoming);
+        // console.log("Upcoming: ", upcoming);
         setTrainings(upcoming.slice(0, UPCOMING_TRAININGS_CNT));
         if (role === 'USER')
             setInvitations(await getInvitationsLocal());
@@ -117,10 +118,10 @@ export default function Home() {
             await AsyncStorage.removeItem('role');
             await clearDatabase();
             router.push('/');
-        } catch (error) {
+        } catch (error: any) {
             console.error('Error during logout:', error);
-            setErrorMessage('Failed to logout. Please try again.');
-            setIsErrorPopupVisible(true);
+            // setErrorMessage('Failed to logout. Please try again.');
+            // setIsErrorPopupVisible(true);
         }
     }
     useFocusEffect(

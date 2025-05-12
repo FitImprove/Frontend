@@ -6,6 +6,7 @@ import * as Notifications from "expo-notifications";
 import { useEffect, useState } from 'react';
 import { getRole, Role } from '@/src/utils/api';
 import { init as initDB } from '@/src/db/init';
+import { Provider as PaperProvider } from 'react-native-paper';
 
 import {NotificationProvider} from "@/src/contexts/Notification";
 import { RoleProvider, useRole } from '@/src/contexts/RoleContext';
@@ -48,7 +49,9 @@ export default function Layout() {
         <NotificationProvider>
             <ThemeProvider>
                 <RoleProvider>
-                    <Stack screenOptions={{ headerShown: false }} />
+                    <PaperProvider>
+                        <Stack screenOptions={{ headerShown: false }} />
+                    </PaperProvider>
                 </RoleProvider>
             </ThemeProvider>
         </NotificationProvider>

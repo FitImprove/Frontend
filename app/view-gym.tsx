@@ -14,6 +14,7 @@ export default function ViewGymScreen() {
     const gymData = JSON.parse(gym as string);
     const mapRef = useRef<MapView>(null);
 
+    console.log("Latitude: ", gymData.latitude, "\nLongitude: ", gymData.longitude);
     const [marker, setMarker] = useState({
         latitude: gymData.latitude ? parseFloat(gymData.latitude) : 48.1486,
         longitude: gymData.longitude ? parseFloat(gymData.longitude) : 17.1077,

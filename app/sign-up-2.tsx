@@ -8,6 +8,8 @@ import { heightPercentageToDP as hp, widthPercentageToDP as wp } from 'react-nat
 import { publicApi, setAuthToken } from "../src/utils/api";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import ErrorPopup from '../src/components/ErrorPopup';
+import { useRole } from '@/src/contexts/RoleContext';
+import { init as initDB } from '@/src/db/init';
 
 type Role = 'USER' | 'COACH';
 
@@ -23,6 +25,7 @@ export default function SignUpScreen2() {
     const [confirmPassword, setConfirmPassword] = useState('');
     const [errorMessage, setErrorMessage] = useState('');
     const [isErrorPopupVisible, setIsErrorPopupVisible] = useState(false);
+    const {setRole} = useRole();
 
     const validateForm = () => {
         // Валідація email
@@ -68,15 +71,14 @@ export default function SignUpScreen2() {
                 });
                 const token = response.data.token;
                 if (token && response.data.id) {
+                    await AsyncStorage.clear();
                     await setAuthToken(token);
-                    await AsyncStorage.setItem('role', response.data.role.toString());
+                    await setRole(response.data.role.toString());
                     await AsyncStorage.setItem('userId', response.data.id.toString());
-                    console.log('Token saved to AsyncStorage:', token);
-                    // console.log('Role saved to AsyncStorage:', response.data.role);
+                    await initDB(response.data.role.toString());
 
                     router.push('/home');
-                }
-                else {
+                } else {
                     setErrorMessage('No token or user ID received from sign-up response');
                     setIsErrorPopupVisible(true);
                 }

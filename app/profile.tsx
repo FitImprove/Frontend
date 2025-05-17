@@ -293,6 +293,7 @@ export default function ProfileScreen() {
             return false;
         }
         if (role.toLowerCase() === 'coach') {
+            console.log("Check, ", latitude, " ", longitude);
             if (fields && fields.split(', ').some(field => field.length < 1)) {
                 setErrorMessage('Each field must be non-empty.');
                 setIsErrorPopupVisible(true);
@@ -339,6 +340,7 @@ export default function ProfileScreen() {
             setIsErrorPopupVisible(true);
             return false;
         }
+        console.log("End check");
         return true;
     };
 

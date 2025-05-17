@@ -6,19 +6,31 @@ import { styles } from '@/src/styles/MapStyles';
 import {useLocalSearchParams, useRouter} from 'expo-router';
 import ErrorPopup from '@/src/components/ErrorPopup'; // Імпортуємо твій попап
 
+type Coordinate = {
+  latitude: number;
+  longitude: number;
+};
+
+type Region = {
+  latitude: number;
+  longitude: number;
+  latitudeDelta: number;
+  longitudeDelta: number;
+};
+
 export default function MapSearchScreen() {
     const { theme } = useTheme();
     const router = useRouter();
     const mapRef = useRef(null);
     const params = useLocalSearchParams();
     const [searchQuery, setSearchQuery] = useState(params.address || '');
-    const [marker, setMarker] = useState({
-        latitude: params.latitude || 48.1486, // Центр Братислави
-        longitude: params.longitude || 17.1077,
+    const [marker, setMarker] = useState<Coordinate>({
+        latitude: parseFloat(params.latitude) || 48.1486, // Центр Братислави
+        longitude: parseFloat(params.longitude) || 17.1077,
     });
-    const [region, setRegion] = useState({
-        latitude: params.latitude || 48.1486,
-        longitude: params.longitude || 17.1077,
+    const [region, setRegion] = useState<Region>({
+        latitude: parseFloat(params.latitude) || 48.1486,
+        longitude: parseFloat(params.longitude) || 17.1077,
         latitudeDelta: 0.0922,
         longitudeDelta: 0.0421,
     });
@@ -38,7 +50,9 @@ export default function MapSearchScreen() {
     };
 
     const handleMapPress = async (e) => {
+        console.log("Coordinate 41");
         const { latitude, longitude } = e.nativeEvent.coordinate;
+        console.log("EndCoordinate 41");
         setMarker({ latitude, longitude });
         setRegion({ ...region, latitude, longitude });
         console.log('New marker position:', { latitude, longitude });
@@ -136,8 +150,8 @@ export default function MapSearchScreen() {
     };
 
     const handleSave = () => {
-        console.log(marker.latitude.toString());
-        console.log(marker.longitude.toString());
+        console.log(marker.latitude);
+        console.log(marker.longitude);
         router.back();
         router.setParams({
             latitude: marker.latitude.toString(),

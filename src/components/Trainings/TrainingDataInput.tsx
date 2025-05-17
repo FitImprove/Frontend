@@ -5,7 +5,7 @@ import { Menu, Button } from 'react-native-paper';
 import Toast from 'react-native-toast-message';
 import DateTimePicker from '@react-native-community/datetimepicker';
 
-import { getTrainingType } from '@/src/utils/training';
+import { getTrainingType, localISOString } from '@/src/utils/training';
 import { Training } from '@/src/utils/training';
 import { useState } from 'react';
 
@@ -26,7 +26,7 @@ function formatTime(date: Date) {
 export function validateTrainingData(training: Training): String|undefined {
     if (training.title === "") return "Title can not be empty";
     if (training.type === "")  return "Type can not be empty";
-    if (training.time.getTime() < new Date().getTime()) 
+    if (new Date(localISOString(training.time)).getTime() < new Date().getTime()) 
         return "Trying to create training for past time";
     let diff = (training.time.getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24);
     if (diff > 360) return "Can not create training for more then 360 days into the future";

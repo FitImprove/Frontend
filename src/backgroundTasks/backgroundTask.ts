@@ -29,7 +29,7 @@ TaskManager.defineTask(BACKGROUND_NOTIFICATION_TASK, async () => {
         await Notifications.scheduleNotificationAsync({
             content: {
                 title: 'Upcoming Training!',
-                body: `It facking works`,
+                body: `Upcoming trainings(background task)`,
                 // body: `Your training "${training.title}" starts in 1 hour at ${new Date(training.time).toLocaleTimeString()}.`,
                 // data: { trainingId: training.id },
             },

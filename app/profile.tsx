@@ -2,7 +2,6 @@ import { View, Text, TextInput, TouchableOpacity, Platform, ScrollView, Keyboard
 import { useTheme } from '@/src/contexts/ThemeContext';
 import { useNotification } from '@/src/contexts/Notification';
 import { styles } from '@/src/styles/ProfileStyles';
-import WaveBackground from '../src/components/WaveBackground';
 import { useState, useEffect } from 'react';
 import { heightPercentageToDP as hp, widthPercentageToDP as wp } from "react-native-responsive-screen";
 import { Switch, Modal } from 'react-native';
@@ -15,7 +14,7 @@ import * as ImagePicker from 'expo-image-picker';
 import { Image } from 'react-native';
 import * as FileSystem from 'expo-file-system';
 import { encode } from 'base64-arraybuffer';
-import asyncStorage from "@react-native-async-storage/async-storage/src/AsyncStorage";
+
 export default function ProfileScreen() {
     const { theme, toggleTheme } = useTheme();
     const { expoPushToken } = useNotification();
@@ -294,6 +293,7 @@ export default function ProfileScreen() {
             return false;
         }
         if (role.toLowerCase() === 'coach') {
+            console.log("Check, ", latitude, " ", longitude);
             if (fields && fields.split(', ').some(field => field.length < 1)) {
                 setErrorMessage('Each field must be non-empty.');
                 setIsErrorPopupVisible(true);
@@ -340,6 +340,7 @@ export default function ProfileScreen() {
             setIsErrorPopupVisible(true);
             return false;
         }
+        console.log("End check");
         return true;
     };
 
@@ -480,7 +481,7 @@ export default function ProfileScreen() {
             if (hasChanges) {
                 setIsEditing(false);
                 await toggleTheme(mode.toLowerCase());
-                await asyncStorage.setItem("theme", mode.toLowerCase())
+                await AsyncStorage.setItem("theme", mode.toLowerCase());
             } else {
                 setIsEditing(false);
             }
@@ -625,6 +626,8 @@ export default function ProfileScreen() {
             await setAuthToken('');
             await AsyncStorage.removeItem('userId');
             await AsyncStorage.removeItem('role');
+            await AsyncStorage.removeItem('theme');
+            await toggleTheme('purple');
             router.push('/');
         } catch (error) {
             console.error('Error during logout:', error);
@@ -876,7 +879,7 @@ export default function ProfileScreen() {
                             <View style={styles.settingsWrapper}>
                                 <Text style={[styles.label, { color: theme.textOnElement }]}>Mode</Text>
                                 <TouchableOpacity
-                                    onPress={() => isEditing && setIsThemeModalVisible(true)}
+                                    onPress={() => setIsThemeModalVisible(true)}
                                     style={[styles.input, { backgroundColor: theme.inputBackground, borderColor: theme.inputBorder, width: wp('40%'), justifyContent: 'center' }]}
                                 >
                                     <Text style={{ color: theme.inputText }}>{mode || 'Select mode'}</Text>
@@ -942,6 +945,8 @@ export default function ProfileScreen() {
                                 onPress={() => {
                                     setMode(themeOption);
                                     setIsThemeModalVisible(false);
+                                    toggleTheme(themeOption.toLowerCase());
+                                    AsyncStorage.setItem('theme', themeOption.toLowerCase());
                                 }}
                                 style={{
                                     paddingVertical: hp('1%'),

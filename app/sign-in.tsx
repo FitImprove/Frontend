@@ -19,7 +19,7 @@ export default function SignInScreen() {
     const [errorMessage, setErrorMessage] = useState('');
     const [isErrorPopupVisible, setIsErrorPopupVisible] = useState(false);
 
-    const {role, setRole} = useRole();
+    const {setRole} = useRole();
 
     // Валідація форми
     const validateForm = () => {
@@ -48,18 +48,19 @@ export default function SignInScreen() {
                     email: email,
                     password: password,
                 });
-                console.log("Got signin response");
-
-                // Зберігаємо токен у AsyncStorage
+                
                 const token = response.data.token;
                 if (token) {
-                    console.log("Setting data", response.data);
                     await AsyncStorage.clear();
                     await setAuthToken(token);
                     await setRole(response.data.role.toString());
                     await AsyncStorage.setItem('userId', response.data.id.toString());
-                    await initDB(response.data.role.toString());
-                    console.log('Token saved to AsyncStorage:', token);
+                    await initDB(response.data.role.toString());    
+
+                    setEmail('');
+                    setPassword('');
+                    setErrorMessage('');
+                    setIsErrorPopupVisible(false);
                     router.push('/home');
                 } else {
                     setErrorMessage('No token received from sign-in response');
@@ -67,7 +68,8 @@ export default function SignInScreen() {
                 }
             } catch (error) {
                 console.error("Error during signin:", error);
-                setErrorMessage(error.response?.data?.message || 'Failed to sign in. Please try again.');
+                setErrorMessage(error as string);
+                // setErrorMessage(error.response?.data?.message || 'Failed to sign in. Please try again.');
                 setIsErrorPopupVisible(true);
             }
         }
@@ -97,6 +99,7 @@ export default function SignInScreen() {
                     keyboardShouldPersistTaps="handled"
                 >
                     <View style={styles.innerContainer}>
+                        <Text>{errorMessage}</Text>
                         <View style={styles.textContainer}>
                             <Text style={[styles.text, { color: theme.text }]}>Sign in</Text>
                         </View>

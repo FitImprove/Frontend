@@ -15,8 +15,7 @@ import { api, getRole, Role, setAuthToken } from "@/src/utils/api";
 import { registerTrainingReminderTask, BACKGROUND_NOTIFICATION_TASK } from '@/src/backgroundTasks/backgroundTask';
 import { widthPercentageToDP as wp, heightPercentageToDP as hp } from 'react-native-responsive-screen';
 import getGlobalStyle from '@/src/styles/Global';
-import { clearDatabase, TrainingUserDTO, updateDB } from '@/src/db/init';
-import { styles as profileStyles } from "@/src/styles/ProfileStyles";
+import { clearDatabase, updateDB } from '@/src/db/init';
 import { init as initDB } from '@/src/db/init';
 import * as BackgroundFetch from 'expo-background-fetch';
 
@@ -48,6 +47,7 @@ export default function Home() {
 
     const router = useRouter();
     const { role } = useRole();
+    console.log(`Role in home: ${role}`);
 
     const [trainings, setTrainings] = useState<Training[]>([]);
     const [invitations, setInvitations] = useState<Training[]>([]);
@@ -66,9 +66,13 @@ export default function Home() {
             // Спроба отримати налаштування з бекенду
             const response = await api.get("/settings/user");
             console.log(response.data);
-            const newTheme = response.data.theme.toLowerCase();
-            toggleTheme(newTheme);
-            await AsyncStorage.setItem("theme", newTheme);
+            let _theme = await AsyncStorage.getItem('theme');
+            if (_theme === undefined || _theme === null) {
+                _theme = response.data.theme.toLowerCase();
+            }
+            toggleTheme(_theme);
+            if (_theme)
+                await AsyncStorage.setItem("theme", _theme.toLowerCase());
         } catch (error: any) {
             console.log('Error fetching settings from backend:', error);
 
@@ -102,13 +106,18 @@ export default function Home() {
     }, []);
 
     async function init() {
-        await updateDB(role);
-
         const upcoming: Training[] = await getUpcomingLocal();
-        // console.log("Upcoming: ", upcoming);
         setTrainings(upcoming.slice(0, UPCOMING_TRAININGS_CNT));
         if (role === 'USER')
             setInvitations(await getInvitationsLocal());
+        
+        if (await updateDB(role)) {
+            const _upcoming: Training[] = await getUpcomingLocal();
+            setTrainings(_upcoming.slice(0, UPCOMING_TRAININGS_CNT));
+            if (role === 'USER')
+                setInvitations(await getInvitationsLocal());
+            else setInvitations([]);
+        }
     }
 
     async function handleLogout() {
@@ -128,7 +137,7 @@ export default function Home() {
         useCallback(() => {
             init();
             return () => {};
-        }, [])
+        }, [role])
     );
 
     async function cancelTraining(training: Training) {

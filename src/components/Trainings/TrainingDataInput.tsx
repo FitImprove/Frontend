@@ -1,11 +1,11 @@
 import { View, Text, StyleSheet, TextInput, TouchableOpacity, Platform } from 'react-native';
 import { Theme, useTheme } from '@/src/contexts/ThemeContext';
 import { heightPercentageToDP as hp, widthPercentageToDP as wp } from 'react-native-responsive-screen';
-import RNPickerSelect from 'react-native-picker-select';
+import { Menu, Button } from 'react-native-paper';
 import Toast from 'react-native-toast-message';
 import DateTimePicker from '@react-native-community/datetimepicker';
 
-import { getTrainingType } from '@/src/utils/training';
+import { getTrainingType, localISOString } from '@/src/utils/training';
 import { Training } from '@/src/utils/training';
 import { useState } from 'react';
 
@@ -26,7 +26,7 @@ function formatTime(date: Date) {
 export function validateTrainingData(training: Training): String|undefined {
     if (training.title === "") return "Title can not be empty";
     if (training.type === "")  return "Type can not be empty";
-    if (training.time.getTime() < new Date().getTime()) 
+    if (new Date(localISOString(training.time)).getTime() < new Date().getTime()) 
         return "Trying to create training for past time";
     let diff = (training.time.getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24);
     if (diff > 360) return "Can not create training for more then 360 days into the future";
@@ -57,6 +57,7 @@ export default function TrainingDataInput({ training, setTraining, isTimeChangab
 
     const [isDateOpen, setIsDateOpen] = useState(false);
     const [isTimeOpen, setIsTimeOpen] = useState(false);
+    const [menuVisible, setMenuVisible] = useState(false);
 
     return <View style={style.container}>
         <View style={style.rowContainer}>
@@ -139,48 +140,17 @@ export default function TrainingDataInput({ training, setTraining, isTimeChangab
         
         <View style={style.rowContainer}>
             <Text>For</Text>
-            <RNPickerSelect
-                onValueChange={(v: any) => setTraining(t => ({ ...t, forType: getTrainingType(v) }))}
-                items={[
-                    { label: 'everyone', value: 'EVERYONE' },
-                    { label: 'limited', value: 'LIMITED' }
-                ]}
-                value={training.forType}
-                placeholder={{}}
-                style={{
-                    inputIOS: {
-                        backgroundColor: theme.inputBackground,
-                        borderRadius: 20,
-                        marginLeft: 20,
-                        paddingVertical: 12,
-                        paddingHorizontal: 10,
-                        fontSize: wp('4%'),
-                        fontFamily: 'InriaSerif-Regular',
-                        color: theme.inputText,
-                        textAlign: 'center',
-                    },
-                    inputAndroid: {
-                        backgroundColor: theme.inputBackground,
-                        borderRadius: 20,
-                        marginLeft: 20,
-                        paddingVertical: 8,
-                        paddingHorizontal: 10,
-                        fontSize: wp('4%'),
-                        fontFamily: 'InriaSerif-Regular',
-                        color: theme.inputText,
-                        textAlign: 'center',
-                        width: wp("70%")
-                    },
-                    iconContainer: {
-                        top: 15,
-                        right: 12,
-                    },
-                    placeholder: {
-                        color: theme.inputText,
-                    } 
-                }} 
-                useNativeAndroidPickerStyle={false}
-            />
+            <Menu
+                visible={menuVisible}
+                onDismiss={() => setMenuVisible(false)}
+                anchor={
+                    <Button mode="contained" onPress={() => setMenuVisible(true)} style={{ marginLeft: 20 }}>
+                        {training.forType || 'Select'}
+                    </Button>
+                }>
+                <Menu.Item onPress={() => { setTraining(t => ({ ...t, forType: getTrainingType('EVERYONE') })); setMenuVisible(false); }} title="everyone" />
+                <Menu.Item onPress={() => { setTraining(t => ({ ...t, forType: getTrainingType('LIMITED') })); setMenuVisible(false); }} title="limited" />
+            </Menu>
         </View>
         <View style={style.rowContainer}>
             <Text style={style.fieldText}>Type</Text>

@@ -3,9 +3,10 @@ import { ThemeProvider } from '../src/contexts/ThemeContext';
 import { useFonts } from 'expo-font';
 import { Text, View } from 'react-native';
 import * as Notifications from "expo-notifications";
-import { useEffect } from 'react';
-import {api, getRole, Role} from '@/src/utils/api';
+import { useEffect, useState } from 'react';
+import { getRole, Role } from '@/src/utils/api';
 import { init as initDB } from '@/src/db/init';
+import { Provider as PaperProvider } from 'react-native-paper';
 
 import {NotificationProvider} from "@/src/contexts/Notification";
 import { RoleProvider, useRole } from '@/src/contexts/RoleContext';
@@ -25,9 +26,11 @@ export default function Layout() {
         async function init() {
             console.log("Role in init: ", await getRole());
             const role = (await getRole()) || 'USER';
-            initDB(role as Role);
+            await initDB(role as Role);
+            console.log("Db inited");
         }
         init();
+        console.log("Calling registrate task");
     }, []);
 
     const [fontsLoaded] = useFonts({
@@ -46,7 +49,9 @@ export default function Layout() {
         <NotificationProvider>
             <ThemeProvider>
                 <RoleProvider>
-                    <Stack screenOptions={{ headerShown: false }} />
+                    <PaperProvider>
+                        <Stack screenOptions={{ headerShown: false }} />
+                    </PaperProvider>
                 </RoleProvider>
             </ThemeProvider>
         </NotificationProvider>

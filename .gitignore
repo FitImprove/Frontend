@@ -37,6 +37,8 @@ yarn-error.*
 
 app-example
 
+.vscode/
+.idea/
 google-services.json
 ios/
 android/

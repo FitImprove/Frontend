@@ -12,6 +12,16 @@ export enum TrainingStatus {
     CANCELED = "CANCELED"
 }
 
+const pad = (n: number) => n.toString().padStart(2, '0');
+export const localISOString = (date: Date) => {
+    return date.getFullYear() +
+        '-' + pad(date.getMonth() + 1) +
+        '-' + pad(date.getDate()) +
+        'T' + pad(date.getHours()) +
+        ':' + pad(date.getMinutes()) +
+        ':' + pad(date.getSeconds());
+};
+
 export enum TrainingType {
     EVERYONE = "EVERYONE",
     LIMITED = "LIMITED"
@@ -306,7 +316,7 @@ export async function createTraining(training: Training, users: number[]) {
         id: training.id,
         coachId: training.coachId,
         forType: training.forType,
-        time: training.time.toISOString().slice(0, 19),
+        time: localISOString(training.time),
         freeSlots: training.freeSlots,
         durationMinutes: training.duration,
         title: training.title,

@@ -1,4 +1,4 @@
-import { View, Text, TouchableOpacity, StyleSheet, ScrollView, Dimensions, FlatList } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, ScrollView, Dimensions, FlatList, Pressable } from 'react-native';
 import { Theme, useTheme } from '@/src/contexts/ThemeContext';
 import WaveBackground from "@/src/components/WaveBackground";
 import { useCallback, useEffect, useState } from 'react';
@@ -11,12 +11,13 @@ import { useRole } from '@/src/contexts/RoleContext';
 import TrainingCancelConfirm from '@/src/components/Trainings/TrainingCancelConfirm';
 import Toast from 'react-native-toast-message';
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { api, setAuthToken } from "@/src/utils/api";
+
+import { api, getRole, Role, setAuthToken } from "@/src/utils/api";
 import { registerTrainingReminderTask, BACKGROUND_NOTIFICATION_TASK } from '@/src/backgroundTasks/backgroundTask';
 import { widthPercentageToDP as wp, heightPercentageToDP as hp } from 'react-native-responsive-screen';
 import getGlobalStyle from '@/src/styles/Global';
-import { clearDatabase, TrainingUserDTO } from '@/src/db/init';
-import { styles as profileStyles } from "@/src/styles/ProfileStyles";
+import { clearDatabase, updateDB } from '@/src/db/init';
+import { init as initDB } from '@/src/db/init';
 import * as BackgroundFetch from 'expo-background-fetch';
 
 
@@ -30,8 +31,6 @@ export default function Home() {
     const { theme, toggleTheme } = useTheme();
     const style = isTablet ? getTabletStyle(theme) : getPhoneStyle(theme); // Вибираємо стилі залежно від типу пристрою
     const styles = getGlobalStyle(theme);
-    const [errorMessage, setErrorMessage] = useState('');
-    const [isErrorPopupVisible, setIsErrorPopupVisible] = useState(false);
     const cancelTrainingError = (e: any) => {
         Toast.show({
             type: 'error',
@@ -50,16 +49,77 @@ export default function Home() {
 
     const router = useRouter();
     const { role } = useRole();
+    console.log(`Role in home: ${role}`);
 
     const [trainings, setTrainings] = useState<Training[]>([]);
     const [invitations, setInvitations] = useState<Training[]>([]);
     const [trainingToCancel, setTrainingToCancel] = useState<Training | null>(null);
+
+    async function _init() {
+        const role = (await getRole()) || 'USER';
+        await initDB(role as Role);
+        const upcoming: Training[] = await getUpcomingLocal();
+        console.log("Upcoming: ", upcoming);
+        setTrainings(upcoming.slice(0, UPCOMING_TRAININGS_CNT));
+    }
+
+    async function initSettings() {
+        try {
+            // Спроба отримати налаштування з бекенду
+            const response = await api.get("/settings/user");
+            console.log(response.data);
+            let _theme = await AsyncStorage.getItem('theme');
+            if (_theme === undefined || _theme === null) {
+                _theme = response.data.theme.toLowerCase();
+            }
+            toggleTheme(_theme);
+            if (_theme)
+                await AsyncStorage.setItem("theme", _theme.toLowerCase());
+        } catch (error: any) {
+            console.log('Error fetching settings from backend:', error);
+
+            if (error.response?.status === 401) {
+                await handleLogout();
+                router.push('/sign-in');
+            } else if (error.response?.status === 403) {
+                await handleLogout();
+                router.push('/sign-in');
+            }
+            const storedTheme = await AsyncStorage.getItem("theme");
+            if (storedTheme) {
+                toggleTheme(storedTheme);
+            } else {
+                toggleTheme("purple");
+            }
+        }
+    }
+
+    useEffect(() => {
+        async function q() {
+            _init();
+            initSettings();
+            await registerTrainingReminderTask();
+            const testBackgroundTask = async () => {
+                const result = await BackgroundFetch.performFetchAsync(BACKGROUND_NOTIFICATION_TASK);    
+                console.log('Manual background task result:', result);
+            };testBackgroundTask();
+        }
+        q();
+    }, []);
 
     async function init() {
         const upcoming: Training[] = await getUpcomingLocal();
         setTrainings(upcoming.slice(0, UPCOMING_TRAININGS_CNT));
         if (role === 'USER')
             setInvitations(await getInvitationsLocal());
+        
+        if (await updateDB(role)) {
+            const _upcoming: Training[] = await getUpcomingLocal();
+            setTrainings(_upcoming.slice(0, UPCOMING_TRAININGS_CNT));
+            if (role === 'USER')
+                setInvitations(await getInvitationsLocal());
+            else setInvitations([]);
+        }
     }
 
     async function handleLogout() {
@@ -69,54 +129,20 @@ export default function Home() {
             await AsyncStorage.removeItem('role');
             await clearDatabase();
             router.push('/');
-        } catch (error) {
+        } catch (error: any) {
             console.error('Error during logout:', error);
-            setErrorMessage('Failed to logout. Please try again.');
-            setIsErrorPopupVisible(true);
+            // setErrorMessage('Failed to logout. Please try again.');
+            // setIsErrorPopupVisible(true);
         }
     }
-
     useFocusEffect(
         useCallback(() => {
             init();
-            registerTrainingReminderTask();
-            const testBackgroundTask = async () => {
-                const result = await BackgroundFetch.performFetchAsync(BACKGROUND_NOTIFICATION_TASK);
-                console.log('Manual background task result:', result);
-            };
-            testBackgroundTask();
+
             return () => {};
-        }, [])
+        }, [role])
     );
 
-    useEffect(() => {
-        const func = async () => {
-            try {
-                console.log(await AsyncStorage.getItem('token'));
-                const response = await api.get("/settings/user");
-                console.log(response.data);
-                const newTheme = response.data.theme.toLowerCase();
-                toggleTheme(newTheme);
-                await AsyncStorage.setItem("theme", newTheme);
-            } catch (error: any) {
-                console.log('Error fetching settings from backend:', error);
-                if (error.response?.status === 401) {
-                    await handleLogout();
-                    router.push('/sign-in');
-                } else if (error.response?.status === 403) {
-                    await handleLogout();
-                    router.push('/sign-in');
-                }
-                const storedTheme = await AsyncStorage.getItem("theme");
-                if (storedTheme) {
-                    toggleTheme(storedTheme);
-                } else {
-                    toggleTheme("purple");
-                }
-            }
-        };
-        func();
-    }, []);
 
     async function cancelTraining(training: Training) {
         try {
@@ -289,7 +315,7 @@ export default function Home() {
             <BottomNavigation />
             <Toast />
         </View>
-    );
+    )
 }
 
 // Стилі для телефонів

@@ -5,14 +5,32 @@ import WaveBackground from '../src/components/WaveBackground';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { useState } from 'react';
 import { heightPercentageToDP as hp, widthPercentageToDP as wp } from 'react-native-responsive-screen';
-import { publicApi, setAuthToken } from "../src/utils/api";
-import AsyncStorage from "@react-native-async-storage/async-storage";
+import { publicApi, setAuthToken } from '../src/utils/api';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import ErrorPopup from '../src/components/ErrorPopup';
 import { useRole } from '@/src/contexts/RoleContext';
 import { init as initDB } from '@/src/db/init';
 
+/**
+ * Type for user role
+ * @typedef Role
+ */
 type Role = 'USER' | 'COACH';
 
+/**
+ * SignUpScreen2 component handles the second step of user registration.
+ *
+ * @remarks
+ * - Collects and validates email, password, and password confirmation.
+ * - Submits registration data to the backend, including data from the first step.
+ * - Stores authentication token, user ID, and role, and initializes the local database.
+ * - Redirects to the home screen upon successful registration.
+ * - Uses ThemeContext for styling and WaveBackground for visual design.
+ * - Supports responsive design for tablets and phones with react-native-responsive-screen.
+ * - Displays error popups for invalid inputs or API failures.
+ *
+ * @returns {JSX.Element} Rendered sign-up interface with email and password fields, and navigation buttons.
+ */
 export default function SignUpScreen2() {
     const { theme } = useTheme();
     const router = useRouter();
@@ -25,29 +43,32 @@ export default function SignUpScreen2() {
     const [confirmPassword, setConfirmPassword] = useState('');
     const [errorMessage, setErrorMessage] = useState('');
     const [isErrorPopupVisible, setIsErrorPopupVisible] = useState(false);
-    const {setRole} = useRole();
+    const { setRole } = useRole();
 
+    /**
+     * Validates the sign-up form inputs
+     * @returns {boolean} True if the form is valid, false otherwise
+     */
     const validateForm = () => {
-        // Валідація email
         if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
             setErrorMessage('Email must be a valid email address');
             setIsErrorPopupVisible(true);
             return false;
         }
 
-        // Валідація password
         if (
             !password ||
             password.length < 8 ||
             password.length > 128 ||
             !/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).+$/.test(password)
         ) {
-            setErrorMessage('Password must be 8-128 characters long, with at least one uppercase letter, one lowercase letter, and one digit');
+            setErrorMessage(
+                'Password must be 8-128 characters long, with at least one uppercase letter, one lowercase letter, and one digit'
+            );
             setIsErrorPopupVisible(true);
             return false;
         }
 
-        // Валідація confirmPassword
         if (!confirmPassword || confirmPassword !== password) {
             setErrorMessage('Passwords must match and cannot be empty');
             setIsErrorPopupVisible(true);
@@ -57,10 +78,13 @@ export default function SignUpScreen2() {
         return true;
     };
 
+    /**
+     * Handles the sign-up submission
+     */
     const handleSignUp = async () => {
         if (validateForm()) {
             try {
-                const response = await publicApi.post("/users/signup", {
+                const response = await publicApi.post('/users/signup', {
                     name: firstName,
                     surname: secondName,
                     username: username,
@@ -83,13 +107,16 @@ export default function SignUpScreen2() {
                     setIsErrorPopupVisible(true);
                 }
             } catch (error) {
-                console.error("Error in signUp:", error);
+                console.error('Error in signUp:', error);
                 setErrorMessage('An error occurred during sign-up. Please try again.');
                 setIsErrorPopupVisible(true);
             }
         }
     };
 
+    /**
+     * Closes the error popup
+     */
     const closeErrorPopup = () => {
         setIsErrorPopupVisible(false);
         setErrorMessage('');
@@ -111,7 +138,7 @@ export default function SignUpScreen2() {
                         paddingHorizontal: wp('5%'),
                         paddingVertical: hp('2%'),
                     }}
-                    keyboardShouldPersistTaps="handled"
+                    keyboardShouldPersistTaps='handled'
                 >
                     <View style={styles.innerContainer}>
                         <View style={styles.textContainer}>
@@ -125,11 +152,11 @@ export default function SignUpScreen2() {
                                     style={[styles.input, { backgroundColor: theme.inputBackground, color: theme.inputText }]}
                                     value={email}
                                     onChangeText={setEmail}
-                                    placeholder="Enter your email"
+                                    placeholder='Enter your email'
                                     placeholderTextColor={theme.inputText}
-                                    keyboardType="email-address"
-                                    autoCapitalize="none"
-                                    autoComplete="off"
+                                    keyboardType='email-address'
+                                    autoCapitalize='none'
+                                    autoComplete='off'
                                 />
                             </View>
                             <View style={styles.inputWrapper}>
@@ -138,10 +165,10 @@ export default function SignUpScreen2() {
                                     style={[styles.input, { backgroundColor: theme.inputBackground, color: theme.inputText }]}
                                     value={password}
                                     onChangeText={setPassword}
-                                    placeholder="Enter your password"
+                                    placeholder='Enter your password'
                                     placeholderTextColor={theme.inputText}
                                     secureTextEntry
-                                    autoComplete="off"
+                                    autoComplete='off'
                                 />
                             </View>
                             <View style={styles.inputWrapper}>
@@ -150,10 +177,10 @@ export default function SignUpScreen2() {
                                     style={[styles.input, { backgroundColor: theme.inputBackground, color: theme.inputText }]}
                                     value={confirmPassword}
                                     onChangeText={setConfirmPassword}
-                                    placeholder="Confirm your password"
+                                    placeholder='Confirm your password'
                                     placeholderTextColor={theme.inputText}
                                     secureTextEntry
-                                    autoComplete="off"
+                                    autoComplete='off'
                                 />
                             </View>
                         </View>

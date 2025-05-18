@@ -9,12 +9,30 @@ import { getTrainingType, localISOString } from '@/src/utils/training';
 import { Training } from '@/src/utils/training';
 import { useState } from 'react';
 
-interface Props {
-    training: Training,
-    setTraining: React.Dispatch<React.SetStateAction<Training>>,
-    isTimeChangable: boolean,
+/**
+ * Props for the TrainingDataInput component
+ * @interface TrainingDataInputProps
+ */
+export interface TrainingDataInputProps {
+    /**
+     * The training session data
+     */
+    training: Training;
+    /**
+     * Function to update the training data
+     */
+    setTraining: React.Dispatch<React.SetStateAction<Training>>;
+    /**
+     * Whether the training time can be changed
+     */
+    isTimeChangable: boolean;
 }
 
+/**
+ * Formats a date to a time string
+ * @param date - The date to format
+ * @returns {string} The formatted time string
+ */
 function formatTime(date: Date) {
     return date.toLocaleString(undefined, {
         hour: '2-digit',
@@ -23,29 +41,42 @@ function formatTime(date: Date) {
     });
 }
 
-export function validateTrainingData(training: Training): String|undefined {
-    if (training.title === "") return "Title can not be empty";
-    if (training.type === "")  return "Type can not be empty";
-    if (new Date(localISOString(training.time)).getTime() < new Date().getTime()) 
-        return "Trying to create training for past time";
+/**
+ * Validates training data
+ * @param training - The training data to validate
+ * @returns {string | undefined} Error message if validation fails, undefined otherwise
+ */
+export function validateTrainingData(training: Training): string | undefined {
+    if (training.title === '') return 'Title can not be empty';
+    if (training.type === '') return 'Type can not be empty';
+    if (new Date(localISOString(training.time)).getTime() < new Date().getTime())
+        return 'Trying to create training for past time';
     let diff = (training.time.getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24);
-    if (diff > 360) return "Can not create training for more then 360 days into the future";
-    if (training.description.length > 1500) return "Description can have at most 1500 characters";
-    if (training.freeSlots < 0) return "FreeSlots can not be negative";
-    if (training.freeSlots > 128) return "FreeSlots can not be bigger then 128"
+    if (diff > 360) return 'Can not create training for more then 360 days into the future';
+    if (training.description.length > 1500) return 'Description can have at most 1500 characters';
+    if (training.freeSlots < 0) return 'FreeSlots can not be negative';
+    if (training.freeSlots > 128) return 'FreeSlots can not be bigger then 128';
 }
 
-export default function TrainingDataInput({ training, setTraining, isTimeChangable }: Props) {
+/**
+ * A component for inputting and editing training data
+ * @param {TrainingDataInputProps} props - The component props
+ * @returns {JSX.Element} The rendered training data input form
+ */
+export default function TrainingDataInput({ training, setTraining, isTimeChangable }: TrainingDataInputProps) {
     const { theme } = useTheme();
     const style = getStyle(theme);
 
     const formattedDate = training.time.toLocaleDateString(undefined, {
         year: 'numeric',
         month: 'long',
-        day: 'numeric'
+        day: 'numeric',
     });
     const timeframe = `${formatTime(training.time)}`;
 
+    /**
+     * Shows a toast warning for unchangeable fields
+     */
     const unchangableWarning = () => {
         Toast.show({
             type: 'error',

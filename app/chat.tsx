@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { View, Text, TextInput, TouchableOpacity, FlatList, KeyboardAvoidingView, Platform, Image, Dimensions } from 'react-native';
 import { useTheme } from '@/src/contexts/ThemeContext';
-import { getStyles } from '@/src/styles/ChatStyles'; // Оновлено імпорт
+import { getStyles } from '@/src/styles/ChatStyles';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { heightPercentageToDP as hp, widthPercentageToDP as wp } from 'react-native-responsive-screen';
 import { api, getBaseApi } from '@/src/utils/api';
@@ -9,8 +9,13 @@ import ErrorPopup from '../src/components/ErrorPopup';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as FileSystem from 'expo-file-system';
 import { encode } from 'base64-arraybuffer';
+import { AxiosError } from 'axios';
 
-interface Message {
+/**
+ * Interface for a chat message
+ * @interface Message
+ */
+export interface Message {
     id: number;
     chatId: number;
     senderId: number;
@@ -21,19 +26,36 @@ interface Message {
     isRead: boolean;
 }
 
-interface Participant {
+/**
+ * Interface for a chat participant
+ * @interface Participant
+ */
+export interface Participant {
     id: number;
     name: string;
     surname: string;
 }
 
-// Визначення типу пристрою (телефон чи планшет)
 const { width } = Dimensions.get('window');
-const isTablet = width >= 768; // Планшетом вважаємо пристрій із шириною екрану >= 768 пікселів
+const isTablet = width >= 768;
 
+/**
+ * ChatsScreen component for displaying the list of chat conversations
+ * @remarks
+ * - Fetches the current user's role and chats from the API based on that role.
+ * - Caches and loads avatars efficiently using Expo FileSystem and base64 encoding.
+ * - Handles navigation to individual chat screens.
+ * - Shows error popups for common API errors like unauthorized or forbidden access.
+ * - Uses useFocusEffect to reload chats each time the screen is focused.
+ * - Applies dynamic theming via a ThemeContext.
+ * - Responsive layout adapts for tablets and phones using screen width detection.
+ * - No props are required as data and navigation are handled internally.
+ *
+ * @returns {JSX.Element} The rendered chat list screen with navigation and error handling.
+ */
 export default function ChatScreen() {
     const { theme } = useTheme();
-    const styles = getStyles(theme, isTablet); // Вибираємо стилі залежно від типу пристрою
+    const styles = getStyles(theme, isTablet);
     const router = useRouter();
     const { chatId } = useLocalSearchParams();
     const [messages, setMessages] = useState<Message[]>([]);
@@ -47,6 +69,11 @@ export default function ChatScreen() {
     const [participant, setParticipant] = useState<Participant | null>(null);
     const [avatar, setAvatar] = useState<string | null>(null);
 
+    /**
+     * Fetches an image by its path and caches it locally
+     * @param path - The path to the image
+     * @returns {Promise<string>} The local URI of the cached image
+     */
     const fetchImageByPath = async (path: string): Promise<string> => {
         try {
             const safeFileName = path.replace(/[^a-z0-9]/gi, '_').toLowerCase();
@@ -69,6 +96,9 @@ export default function ChatScreen() {
         }
     };
 
+    /**
+     * Initializes the chat by fetching user data, messages, and participant info, and sets up WebSocket
+     */
     useEffect(() => {
         const initializeChat = async () => {
             try {
@@ -146,8 +176,9 @@ export default function ChatScreen() {
                     console.log('WebSocket disconnected');
                 };
             } catch (error) {
-                console.error('Error loading chat:', error);
-                if (error.response?.status === 401) {
+                const axiosError = error as AxiosError;
+                console.error('Error loading chat:', axiosError);
+                if (axiosError.response?.status === 401) {
                     setErrorMessage('Session expired. Please sign in again.');
                     router.push('/sign-in');
                 } else {
@@ -167,6 +198,9 @@ export default function ChatScreen() {
         };
     }, [chatId]);
 
+    /**
+     * Sends a new message via WebSocket
+     */
     const handleSendMessage = () => {
         if (!newMessage.trim()) return;
 
@@ -199,11 +233,17 @@ export default function ChatScreen() {
         }
     };
 
+    /**
+     * Closes the error popup
+     */
     const closeErrorPopup = () => {
         setIsErrorPopupVisible(false);
         setErrorMessage('');
     };
 
+    /**
+     * Navigates to the participant's profile
+     */
     const handleViewProfile = () => {
         if (participant) {
             console.log(participant.id);
@@ -214,6 +254,11 @@ export default function ChatScreen() {
         }
     };
 
+    /**
+     * Renders a single chat message
+     * @param param0 - The message item
+     * @returns {JSX.Element} The rendered message
+     */
     const renderMessage = ({ item }: { item: Message }) => {
         const isSender = item.senderId === parseInt(userId);
 
@@ -255,7 +300,7 @@ export default function ChatScreen() {
                             <Image
                                 source={{ uri: avatar }}
                                 style={{
-                                    width: wp(isTablet ? '6%' : '8%'), // Адаптація розміру аватара
+                                    width: wp(isTablet ? '6%' : '8%'),
                                     height: wp(isTablet ? '6%' : '8%'),
                                     borderRadius: wp(isTablet ? '3%' : '4%'),
                                     borderWidth: 1,
@@ -266,7 +311,7 @@ export default function ChatScreen() {
                         ) : (
                             <View
                                 style={{
-                                    width: wp(isTablet ? '6%' : '8%'), // Адаптація розміру аватара
+                                    width: wp(isTablet ? '6%' : '8%'),
                                     height: wp(isTablet ? '6%' : '8%'),
                                     borderRadius: wp(isTablet ? '3%' : '4%'),
                                     borderWidth: 1,

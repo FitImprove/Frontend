@@ -9,7 +9,12 @@ import ErrorPopup from '../src/components/ErrorPopup';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as FileSystem from 'expo-file-system';
 import { encode } from 'base64-arraybuffer';
+import { AxiosError } from 'axios';
 
+/**
+ * Interface for user profile data
+ * @interface UserProfile
+ */
 interface UserProfile {
     id: number;
     name: string;
@@ -30,6 +35,20 @@ interface UserProfile {
     };
 }
 
+/**
+ * ProfileViewScreen component displays a user's profile information.
+ *
+ * @remarks
+ * - Fetches and displays user profile data, including name, role, and coach-specific fields like gym details.
+ * - Supports avatar image retrieval and caching with Expo FileSystem for optimized performance.
+ * - Allows users to choose a coach or send messages based on roles and existing chats.
+ * - Validates session and role, redirecting to sign-in on unauthorized access.
+ * - Provides navigation to view gym location or chat screens.
+ * - Uses ThemeContext for styling and responsive design with react-native-responsive-screen.
+ * - Displays error popups for API failures, permission issues, or invalid data.
+ *
+ * @returns {JSX.Element} Rendered profile view interface with user details and interaction buttons.
+ */
 export default function ProfileViewScreen() {
     const { theme } = useTheme();
     const router = useRouter();
@@ -41,6 +60,12 @@ export default function ProfileViewScreen() {
     const [currentUserRole, setCurrentUserRole] = useState<'USER' | 'COACH' | null>(null);
     const [chatExists, setChatExists] = useState<boolean>(false);
 
+    /**
+     * Fetches an image by its path and caches it locally
+     * @param path - The path to the image
+     * @returns {Promise<string>} The local URI of the cached image
+     * @throws {Error} If the request fails
+     */
     const fetchImageByPath = async (path: string): Promise<string> => {
         try {
             const safeFileName = path.replace(/[^a-z0-9]/gi, '_').toLowerCase();
@@ -63,6 +88,9 @@ export default function ProfileViewScreen() {
         }
     };
 
+    /**
+     * Loads profile data, role, and avatar on component mount
+     */
     useEffect(() => {
         const loadProfile = async () => {
             try {
@@ -92,7 +120,7 @@ export default function ProfileViewScreen() {
                 if (storedRole === 'USER' && userData.role === 'COACH') {
                     try {
                         const chatExistsResponse = await api.get('/chats/exists', {
-                            params: { coachId: parsedUserId }
+                            params: { coachId: parsedUserId },
                         });
                         setChatExists(chatExistsResponse.data);
                     } catch (error) {
@@ -113,13 +141,14 @@ export default function ProfileViewScreen() {
                     setAvatar(null);
                 }
             } catch (error) {
-                console.error('Error loading profile:', error);
-                if (error.response?.status === 401) {
+                const AxEr = error as AxiosError;
+                console.error('Error loading profile:', AxEr);
+                if (AxEr.response?.status === 401) {
                     setErrorMessage('Session expired. Please sign in again.');
                     router.push('/sign-in');
-                } else if (error.response?.status === 403) {
+                } else if (AxEr.response?.status === 403) {
                     setErrorMessage('Access denied.');
-                } else if (error.response?.status === 404) {
+                } else if (AxEr.response?.status === 404) {
                     setErrorMessage('User not found.');
                 } else {
                     setErrorMessage('Failed to load profile. Please try again.');
@@ -131,12 +160,19 @@ export default function ProfileViewScreen() {
         loadProfile();
     }, [userId]);
 
+    /**
+     * Initiates a chat with the profile's user as a coach
+     */
     const handleChooseAsCoach = async () => {
         try {
             console.log(profile?.id);
-            const response = await api.post('/chats/create', {}, {
-                params: { coachId: profile?.id }
-            });
+            const response = await api.post(
+                '/chats/create',
+                {},
+                {
+                    params: { coachId: profile?.id },
+                }
+            );
             const chatId = response.data.id;
             router.push({
                 pathname: '/chat',
@@ -145,13 +181,14 @@ export default function ProfileViewScreen() {
             setErrorMessage('Coach selected successfully!');
             setIsErrorPopupVisible(true);
         } catch (error) {
-            console.error('Error choosing coach:', error);
-            if (error.response?.status === 401) {
+            const AxEr = error as AxiosError;
+            console.error('Error choosing coach:', AxEr);
+            if (AxEr.response?.status === 401) {
                 setErrorMessage('Session expired. Please sign in again.');
                 router.push('/sign-in');
-            } else if (error.response?.status === 403) {
+            } else if (AxEr.response?.status === 403) {
                 setErrorMessage('Access denied.');
-            } else if (error.response?.status === 404) {
+            } else if (AxEr.response?.status === 404) {
                 setErrorMessage('Coach not found.');
             } else {
                 setErrorMessage('Failed to choose coach. Please try again.');
@@ -160,24 +197,19 @@ export default function ProfileViewScreen() {
         }
     };
 
+    /**
+     * Navigates to an existing chat or creates a new one
+     */
     const handleSendMessage = async () => {
         try {
-            const params = currentUserRole === 'COACH'
-                ? { userId: profile?.id }
-                : { coachId: profile?.id };
+            const params = currentUserRole === 'COACH' ? { userId: profile?.id } : { coachId: profile?.id };
 
             const chatExistsResponse = await api.get('/chats/exists', { params });
             const chatExists = chatExistsResponse.data;
 
             let chatId;
             if (!chatExists) {
-                // const createResponse = await api.post('/chats/create', {}, {
-                //     params: { coachId: profile?.id }
-                // });
-                // chatId = createResponse.data.id;
-                const createParams = currentUserRole === 'COACH'
-                    ? { regularUserId: profile?.id }
-                    : { coachId: profile?.id };
+                const createParams = currentUserRole === 'COACH' ? { regularUserId: profile?.id } : { coachId: profile?.id };
                 const createResponse = await api.post('/chats/create', {}, { params: createParams });
                 chatId = createResponse.data.id;
             } else {
@@ -203,13 +235,14 @@ export default function ProfileViewScreen() {
                 params: { chatId },
             });
         } catch (error) {
-            console.error('Error creating or navigating to chat:', error);
-            if (error.response?.status === 401) {
+            const AxEr = error as AxiosError;
+            console.error('Error creating or navigating to chat:', AxEr);
+            if (AxEr.response?.status === 401) {
                 setErrorMessage('Session expired. Please sign in again.');
                 router.push('/sign-in');
-            } else if (error.response?.status === 403) {
+            } else if (AxEr.response?.status === 403) {
                 setErrorMessage('Access denied.');
-            } else if (error.response?.status === 404) {
+            } else if (AxEr.response?.status === 404) {
                 setErrorMessage('User not found.');
             } else {
                 setErrorMessage('Failed to create or navigate to chat. Please try again.');
@@ -218,6 +251,9 @@ export default function ProfileViewScreen() {
         }
     };
 
+    /**
+     * Navigates to the gym location screen if available
+     */
     const handleViewGym = () => {
         if (profile?.gym?.address && profile.gym.address.trim() !== '') {
             router.push({
@@ -232,6 +268,9 @@ export default function ProfileViewScreen() {
         }
     };
 
+    /**
+     * Closes the error popup
+     */
     const closeErrorPopup = () => {
         setIsErrorPopupVisible(false);
         setErrorMessage('');
@@ -239,7 +278,9 @@ export default function ProfileViewScreen() {
 
     if (!profile) {
         return (
-            <View style={[styles.container, { backgroundColor: theme.background, flex: 1, justifyContent: 'center', alignItems: 'center' }]}>
+            <View
+                style={[styles.container, { backgroundColor: theme.background, flex: 1, justifyContent: 'center', alignItems: 'center' }]}
+            >
                 <Text style={{ color: theme.text, fontSize: wp('5%') }}>Loading...</Text>
                 <ErrorPopup visible={isErrorPopupVisible} message={errorMessage} onClose={closeErrorPopup} />
             </View>
@@ -257,10 +298,9 @@ export default function ProfileViewScreen() {
                     paddingVertical: hp('2%'),
                     paddingBottom: hp('12%'),
                 }}
-                keyboardShouldPersistTaps="handled"
+                keyboardShouldPersistTaps='handled'
             >
                 <View style={styles.innerContainer}>
-
                     <View style={styles.textContainer}>
                         <TouchableOpacity onPress={() => router.back()}>
                             <Text style={[styles.text, { color: theme.accent || '#ff00cc', fontSize: wp('6%') }]}>←</Text>
@@ -269,7 +309,6 @@ export default function ProfileViewScreen() {
                             {`${profile.name} ${profile.surname}`.trim()}'s Profile
                         </Text>
                     </View>
-
 
                     <View style={styles.profileIconContainer}>
                         {avatar ? (
@@ -284,81 +323,104 @@ export default function ProfileViewScreen() {
                         )}
                     </View>
 
-
                     <View style={[styles.inputContainer, { backgroundColor: theme.inputContainer, borderColor: theme.borderColor }]}>
                         <View style={styles.inputWrapper}>
                             <Text style={[styles.label, { color: theme.textOnElement }]}>Name</Text>
-                            <Text style={[styles.input, { backgroundColor: theme.inputBackground, color: theme.inputText, borderColor: theme.inputBorder }]}>
+                            <Text
+                                style={[styles.input, { backgroundColor: theme.inputBackground, color: theme.inputText, borderColor: theme.inputBorder }]}
+                            >
                                 {profile.name}
                             </Text>
                         </View>
                         <View style={styles.inputWrapper}>
                             <Text style={[styles.label, { color: theme.textOnElement }]}>Surname</Text>
-                            <Text style={[styles.input, { backgroundColor: theme.inputBackground, color: theme.inputText, borderColor: theme.inputBorder }]}>
+                            <Text
+                                style={[styles.input, { backgroundColor: theme.inputBackground, color: theme.inputText, borderColor: theme.inputBorder }]}
+                            >
                                 {profile.surname}
                             </Text>
                         </View>
                         <View style={styles.inputWrapper}>
                             <Text style={[styles.label, { color: theme.textOnElement }]}>Username</Text>
-                            <Text style={[styles.input, { backgroundColor: theme.inputBackground, color: theme.inputText, borderColor: theme.inputBorder }]}>
+                            <Text
+                                style={[styles.input, { backgroundColor: theme.inputBackground, color: theme.inputText, borderColor: theme.inputBorder }]}
+                            >
                                 {profile.username}
                             </Text>
                         </View>
                         <View style={styles.inputWrapper}>
                             <Text style={[styles.label, { color: theme.textOnElement }]}>Date of Birth</Text>
-                            <Text style={[styles.input, { backgroundColor: theme.inputBackground, color: theme.inputText, borderColor: theme.inputBorder }]}>
+                            <Text
+                                style={[styles.input, { backgroundColor: theme.inputBackground, color: theme.inputText, borderColor: theme.inputBorder }]}
+                            >
                                 {profile.dateOfBirth}
                             </Text>
                         </View>
                         <View style={styles.inputWrapper}>
                             <Text style={[styles.label, { color: theme.textOnElement }]}>Gender</Text>
-                            <Text style={[styles.input, { backgroundColor: theme.inputBackground, color: theme.inputText, borderColor: theme.inputBorder }]}>
+                            <Text
+                                style={[styles.input, { backgroundColor: theme.inputBackground, color: theme.inputText, borderColor: theme.inputBorder }]}
+                            >
                                 {profile.gender ? profile.gender.charAt(0) + profile.gender.slice(1).toLowerCase() : ''}
                             </Text>
                         </View>
                         <View style={styles.inputWrapper}>
                             <Text style={[styles.label, { color: theme.textOnElement }]}>Role</Text>
-                            <Text style={[styles.input, { backgroundColor: theme.inputBackground, color: theme.inputText, borderColor: theme.inputBorder }]}>
+                            <Text
+                                style={[styles.input, { backgroundColor: theme.inputBackground, color: theme.inputText, borderColor: theme.inputBorder }]}
+                            >
                                 {profile.role}
                             </Text>
                         </View>
                         <View style={styles.inputWrapper}>
                             <Text style={[styles.label, { color: theme.textOnElement }]}>Self Information</Text>
-                            <Text style={[styles.input, { backgroundColor: theme.inputBackground, color: theme.inputText, borderColor: theme.inputBorder }]}>
+                            <Text
+                                style={[styles.input, { backgroundColor: theme.inputBackground, color: theme.inputText, borderColor: theme.inputBorder }]}
+                            >
                                 {profile.selfInformation || 'Not provided'}
                             </Text>
                         </View>
-
 
                         {profile.role === 'COACH' && (
                             <>
                                 <View style={styles.inputWrapper}>
                                     <Text style={[styles.label, { color: theme.textOnElement }]}>Fields</Text>
-                                    <Text style={[styles.input, { backgroundColor: theme.inputBackground, color: theme.inputText, borderColor: theme.inputBorder }]}>
+                                    <Text
+                                        style={[styles.input, { backgroundColor: theme.inputBackground, color: theme.inputText, borderColor: theme.inputBorder }]}
+                                    >
                                         {profile.fields ? profile.fields.join(', ') : 'Not provided'}
                                     </Text>
                                 </View>
                                 <View style={styles.inputWrapper}>
                                     <Text style={[styles.label, { color: theme.textOnElement }]}>Skills</Text>
-                                    <Text style={[styles.input, { backgroundColor: theme.inputBackground, color: theme.inputText, borderColor: theme.inputBorder }]}>
+                                    <Text
+                                        style={[styles.input, { backgroundColor: theme.inputBackground, color: theme.inputText, borderColor: theme.inputBorder }]}
+                                    >
                                         {profile.skills ? profile.skills.join(', ') : 'Not provided'}
                                     </Text>
                                 </View>
                                 <View style={styles.inputWrapper}>
                                     <Text style={[styles.label, { color: theme.textOnElement }]}>Self Introduction</Text>
-                                    <Text style={[styles.input, { backgroundColor: theme.inputBackground, color: theme.inputText, borderColor: theme.inputBorder }]}>
+                                    <Text
+                                        style={[styles.input, { backgroundColor: theme.inputBackground, color: theme.inputText, borderColor: theme.inputBorder }]}
+                                    >
                                         {profile.selfIntroduction || 'Not provided'}
                                     </Text>
                                 </View>
                                 <View style={styles.inputWrapper}>
                                     <Text style={[styles.label, { color: theme.textOnElement }]}>Experience</Text>
-                                    <Text style={[styles.input, { backgroundColor: theme.inputBackground, color: theme.inputText, borderColor: theme.inputBorder }]}>
+                                    <Text
+                                        style={[styles.input, { backgroundColor: theme.inputBackground, color: theme.inputText, borderColor: theme.inputBorder }]}
+                                    >
                                         {profile.worksInFieldSince ? new Date(profile.worksInFieldSince).getFullYear().toString() : 'Not provided'}
                                     </Text>
                                 </View>
                                 <View style={styles.inputWrapper}>
                                     <Text style={[styles.label, { color: theme.textOnElement }]}>Gym</Text>
-                                    <TouchableOpacity onPress={handleViewGym} disabled={!profile.gym?.address || profile.gym.address.trim() === ''}>
+                                    <TouchableOpacity
+                                        onPress={handleViewGym}
+                                        disabled={!profile.gym?.address || profile.gym.address.trim() === ''}
+                                    >
                                         <Text
                                             style={[
                                                 styles.input,
@@ -377,7 +439,6 @@ export default function ProfileViewScreen() {
                             </>
                         )}
                     </View>
-
 
                     {currentUserRole === 'USER' && profile.role === 'COACH' && !chatExists && (
                         <TouchableOpacity onPress={handleChooseAsCoach}>

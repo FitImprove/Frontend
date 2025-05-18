@@ -3,6 +3,9 @@ import React, { createContext, useState, useContext, useEffect, useCallback } fr
 import { getRole, Role } from '../utils/api';
 import { useFocusEffect } from 'expo-router';
 
+/**
+ * Context for managing user role
+ */
 const RoleContext = createContext<any>(null);
 
 export const RoleProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {

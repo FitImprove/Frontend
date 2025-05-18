@@ -7,7 +7,18 @@ import { useState, useEffect } from 'react';
 import { heightPercentageToDP as hp, widthPercentageToDP as wp } from "react-native-responsive-screen";
 import { api } from "../src/utils/api";
 import ErrorPopup from '../src/components/ErrorPopup';
-
+/**
+ * ForgotPasswordScreen component allows users to initiate password recovery.
+ * @remarks
+ * Features include:
+ * - Email input with validation
+ * - Sending recovery code via API with cooldown timer
+ * - Code input that triggers verification automatically when complete
+ * - Error handling with popup messages
+ * - Navigation to reset password screen upon successful code verification
+ * - Responsive layout with keyboard avoiding behavior and themed styling
+ * @returns {JSX.Element} The rendered email and code inputs.
+ */
 export default function ForgotPasswordScreen() {
     const { theme } = useTheme();
     const router = useRouter();
@@ -121,7 +132,7 @@ export default function ForgotPasswordScreen() {
                 >
                     <View style={styles.innerContainer}>
                         <View style={styles.textContainer}>
-                            <Text style={[styles.text, {resieText: true, color: theme.text }]}>Password reset</Text>
+                            <Text style={[styles.text, {color: theme.text }]}>Password reset</Text>
                         </View>
 
                         <View style={[styles.inputContainer, { backgroundColor: theme.inputContainer, borderColor: theme.borderColor }]}>

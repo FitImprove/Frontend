@@ -1,11 +1,28 @@
-import React from 'react';
+import React, { ReactNode } from 'react';
 import { View, StyleSheet } from 'react-native';
 import Svg, { Defs, LinearGradient, Stop, Path } from 'react-native-svg';
 import { widthPercentageToDP as wp, heightPercentageToDP as hp } from 'react-native-responsive-screen';
-import {useTheme} from "@/src/contexts/ThemeContext";
+import { useTheme } from '@/src/contexts/ThemeContext';
 
-export default function BottomNavWave({ children }) {
+/**
+ * Props for the BottomNavWave component
+ * @interface BottomNavWaveProps
+ */
+export interface BottomNavWaveProps {
+    /**
+     * The child components to be rendered within the navigation bar
+     */
+    children: ReactNode;
+}
+
+/**
+ * A component that renders a wave-shaped bottom navigation bar with a gradient background
+ * @param {BottomNavWaveProps} props - The component props
+ * @returns {JSX.Element} The rendered navigation bar
+ */
+export default function BottomNavWave({ children }: BottomNavWaveProps) {
     const { theme } = useTheme();
+
     return (
         <View style={styles.container}>
             <Svg height="100%" width="100%" viewBox="0 0 1440 320" preserveAspectRatio="none">
@@ -18,13 +35,12 @@ export default function BottomNavWave({ children }) {
                 <Path
                     fill="url(#grad)"
                     d="
-    M0,0
-    C360,160 540,-40 720,120
-    C900,-40 1080,160 1440,0
-    L1440,320 L0,320 Z
-  "
+                        M0,0
+                        C360,160 540,-40 720,120
+                        C900,-40 1080,160 1440,0
+                        L1440,320 L0,320 Z
+                    "
                 />
-
             </Svg>
             <View style={styles.buttonContainer}>
                 {children}
@@ -33,6 +49,9 @@ export default function BottomNavWave({ children }) {
     );
 }
 
+/**
+ * Styles for the BottomNavWave component
+ */
 const styles = StyleSheet.create({
     container: {
         position: 'absolute',

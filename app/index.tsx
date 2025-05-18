@@ -7,6 +7,20 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import WaveBackground from "@/src/components/WaveBackground";
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
+/**
+ * HomeScreen component serves as the landing page for unauthenticated users.
+ *
+ * @remarks
+ * - Checks for a valid JWT token in AsyncStorage on mount to determine user authentication status.
+ * - Automatically redirects authenticated users with a valid token to the home route.
+ * - Displays a loading indicator while verifying the token.
+ * - Provides navigation links for signing in or signing up for new users.
+ * - Uses theming context to adapt styles dynamically based on the current theme.
+ * - Includes a background wave animation and welcome image for improved UX.
+ * - Uses Expo Router's navigation methods to manage route transitions.
+ *
+ * @returns {JSX.Element} A screen with sign-in and sign-up buttons, or redirects to authenticated home.
+ */
 export default function HomeScreen() {
     const { theme } = useTheme();
     const router = useRouter();
@@ -34,7 +48,7 @@ export default function HomeScreen() {
                 }
             } catch (error) {
                 console.error('Error checking token:', error);
-                await AsyncStorage.removeItem('token'); // У разі помилки видаляємо токен
+                await AsyncStorage.removeItem('token'); 
                 setIsLoading(false);
             }
         };

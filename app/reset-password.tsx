@@ -7,7 +7,21 @@ import { useState } from 'react';
 import { heightPercentageToDP as hp, widthPercentageToDP as wp } from "react-native-responsive-screen";
 import { publicApi } from "@/src/utils/api";
 import ErrorPopup from '../src/components/ErrorPopup';
-
+import {AxiosError} from "axios";
+/**
+ * ResetPasswordScreen component allows users to reset their password using a token.
+ *
+ * @remarks
+ * - Validates new password and confirmation for minimum length and match.
+ * - Submits password reset request to the backend using a token from navigation params.
+ * - Handles errors with specific messages for invalid tokens or server issues.
+ * - Redirects to sign-in screen upon successful password reset.
+ * - Uses ThemeContext for consistent styling and WaveBackground for visual design.
+ * - Supports responsive design for tablets and phones with react-native-responsive-screen.
+ * - Displays error popups for user feedback on validation or API failures.
+ *
+ * @returns {JSX.Element} Rendered password reset interface with input fields and confirmation button.
+ */
 export default function ResetPasswordScreen() {
     const { theme } = useTheme();
     const router = useRouter();
@@ -45,11 +59,12 @@ export default function ResetPasswordScreen() {
             });
             router.push('/sign-in');
         } catch (error) {
-            console.error("Error during password reset:", error);
+            const AxEr = error as AxiosError;
+            console.error("Error during password reset:", AxEr);
             setErrorMessage(
-                error.response?.status === 404
+                AxEr.response?.status === 404
                     ? 'Token not found'
-                    : error.response?.status === 400
+                    : AxEr.response?.status === 400
                         ? 'Invalid token or password'
                         : 'Failed to reset password. Please try again.'
             );

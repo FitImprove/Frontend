@@ -14,14 +14,46 @@ import * as ImagePicker from 'expo-image-picker';
 import { Image } from 'react-native';
 import * as FileSystem from 'expo-file-system';
 import { encode } from 'base64-arraybuffer';
-
+import {AxiosError} from "axios";
+/**
+ * Interface for an image descriptor
+ * @interface ImageDescriptor
+ */
+interface ImageDescriptor {
+    /**
+     * Unique identifier for the image
+     */
+    id: number;
+    /**
+     * ID of the user associated with the image
+     */
+    userId: number;
+    /**
+     * Path to the image
+     */
+    path: string;
+}
+/**
+ * ProfileScreen component manages user profile display and editing functionality.
+ *
+ * @remarks
+ * - Fetches and displays user data, including name, role, and coach-specific fields like gym details.
+ * - Supports profile image upload and caching with Expo FileSystem for optimized performance.
+ * - Validates input fields and updates user, settings, and gym data via API with error handling.
+ * - Allows theme switching and notification toggling with persistent storage in AsyncStorage.
+ * - Provides responsive design for tablets and phones using react-native-responsive-screen.
+ * - Handles session validation with redirects to sign-in on unauthorized access.
+ * - Includes logout functionality and error popups for user feedback.
+ *
+ * @returns {JSX.Element} Rendered profile interface with editable fields, settings, and navigation.
+ */
 export default function ProfileScreen() {
     const { theme, toggleTheme } = useTheme();
     const { expoPushToken } = useNotification();
     const router = useRouter();
     const params = useLocalSearchParams();
 
-    // Стани для полів профілю
+    
     const [name, setName] = useState('');
     const [surname, setSurname] = useState('');
     const [username, setUsername] = useState('');
@@ -44,10 +76,10 @@ export default function ProfileScreen() {
     const [isErrorPopupVisible, setIsErrorPopupVisible] = useState(false);
     const [isEditing, setIsEditing] = useState(false);
     const [isThemeModalVisible, setIsThemeModalVisible] = useState(false);
-    const [profileImage, setProfileImage] = useState(null);
-    const [imageDescriptors, setImageDescriptors] = useState([]);
+    const [profileImage, setProfileImage] = useState<string | null>(null);
+    const [imageDescriptors, setImageDescriptors] = useState<ImageDescriptor[]>([]);
     const [initialProfileImage, setInitialProfileImage] = useState<string | null>(null);
-    // Стани для початкових значень
+    
     const [initialSettings, setInitialSettings] = useState({
         theme: '',
         fontSize: '',
@@ -71,7 +103,7 @@ export default function ProfileScreen() {
         experience: '',
     });
 
-    // Доступні теми
+    
     const themes = ['Purple', 'Black', 'Contrast'];
     const fetchImageByPath = async (path: string): Promise<string> => {
         try {
@@ -81,13 +113,13 @@ export default function ProfileScreen() {
                 const safeFileName = path.replace(/[^a-z0-9]/gi, '_').toLowerCase();
                 const fileUri = `${FileSystem.cacheDirectory}${safeFileName}.png`;
 
-                // Перевіряємо, чи файл вже існує
+                
                 const fileInfo = await FileSystem.getInfoAsync(fileUri);
                 if (fileInfo.exists) {
                     return fileUri;
                 }
 
-                // Якщо не існує — завантажуємо
+                
                 const response = await api.get(`/images/get/${path}`, {
                     responseType: 'arraybuffer',
                 });
@@ -99,6 +131,10 @@ export default function ProfileScreen() {
                 });
 
                 return fileUri;
+            }
+            else {
+                // Повертаємо порожній рядок або кидаємо помилку, якщо isEditing === true
+                throw new Error('Image fetching is disabled during editing mode');
             }
         } catch (error) {
             console.error('Error', error);
@@ -135,7 +171,7 @@ export default function ProfileScreen() {
                 const response = await api.get('/users/user');
                 const userData = response.data;
 
-                // Заповнення станів лише якщо НЕ в режимі редагування
+                
                 if (!isEditing) {
                     setName(userData.name || '');
                     setSurname(userData.surname || '');
@@ -154,7 +190,7 @@ export default function ProfileScreen() {
                         setAddress(userData.gym?.address || '');
                         setClients(userData.clients || []);
 
-                        // Зберігання початкових значень gym
+                        
                         setInitialGym({
                             latitude: userData.gym?.latitude || '',
                             longitude: userData.gym?.longitude || '',
@@ -167,7 +203,7 @@ export default function ProfileScreen() {
                         setNotifications(userData.settings.notifications || false);
                         setFontSize(userData.settings.fontSize ? userData.settings.fontSize.toString() : '12');
 
-                        // Зберігання початкових значень settings
+                        
                         setInitialSettings({
                             theme: userData.settings.theme ? userData.settings.theme.charAt(0) + userData.settings.theme.slice(1).toLowerCase() : 'Purple',
                             fontSize: userData.settings.fontSize ? userData.settings.fontSize.toString() : '12',
@@ -175,7 +211,7 @@ export default function ProfileScreen() {
                         });
                     }
 
-                    // Зберігання початкових значень user
+                    
                     setInitialUser({
                         name: userData.name || '',
                         surname: userData.surname || '',
@@ -190,6 +226,7 @@ export default function ProfileScreen() {
                     });
                     const descriptorsResponse = await api.get('/images/descriptors');
                     const descriptorsData = descriptorsResponse.data;
+                    console.log('descriptorsData:', descriptorsData);
                     setImageDescriptors(descriptorsData || []);
 
 
@@ -207,14 +244,15 @@ export default function ProfileScreen() {
                     setAddress(params.address.toString());
                 }
             } catch (error) {
-                console.error('Error loading user data or images:', error);
-                if (error.response?.status === 401) {
+                const AxEr = error as AxiosError;
+                console.error('Error loading user data or images:', AxEr);
+                if (AxEr.response?.status === 401) {
                     setErrorMessage('Session expired. Please sign in again.');
                     router.push('/sign-in');
-                } else if (error.response?.status === 403) {
+                } else if (AxEr.response?.status === 403) {
                     setErrorMessage('Access denied.');
                     await handleLogout()
-                } else if (error.response?.status === 404) {
+                } else if (AxEr.response?.status === 404) {
                     setErrorMessage('User or images not found.');
                 } else {
                     setErrorMessage('Failed to load user data or images. Please try again.');
@@ -229,7 +267,7 @@ export default function ProfileScreen() {
     const handleImagePick = async () => {
         console.log('handleImagePick викликано');
 
-        // Перевірка дозволів для доступу до галереї
+        
         const permissionResult = await ImagePicker.requestMediaLibraryPermissionsAsync();
         if (!permissionResult.granted) {
             console.log('Дозвіл на доступ до галереї не надано');
@@ -238,11 +276,11 @@ export default function ProfileScreen() {
             return;
         }
 
-        // Виклик пікера для вибору зображення
+        
         const result = await ImagePicker.launchImageLibraryAsync({
-            mediaTypes: ImagePicker.MediaTypeOptions.Images, // Тільки зображення
-            quality: 1, // Максимальна якість
-            allowsEditing: false, // Чи дозволити редагування (обрізку) зображення
+            mediaTypes: ImagePicker.MediaTypeOptions.Images, 
+            quality: 1, 
+            allowsEditing: false, 
         });
 
         console.log('Відповідь від ImagePicker:', result);
@@ -250,16 +288,16 @@ export default function ProfileScreen() {
         if (!result.canceled && result.assets && result.assets.length > 0) {
             const imageUri = result.assets[0].uri;
             console.log('Вибране зображення URI:', imageUri);
-            setProfileImage(imageUri); // Встановлюємо локальний URI для попереднього перегляду
+            setProfileImage(imageUri); 
         } else {
             console.log('Вибір скасовано');
             setErrorMessage('Вибір зображення скасовано');
             setIsErrorPopupVisible(true);
         }
     };
-    // Валідація полів
+    
     const validateFields = () => {
-        // Обов’язкові поля
+        
         if (!name || name.length < 1 || name.length > 128 || !/^[a-zA-Zа-яА-ЯїЇіІєЄґҐ]+$/.test(name)) {
             setErrorMessage('Name must be 1-128 characters and contain only letters.');
             setIsErrorPopupVisible(true);
@@ -281,7 +319,7 @@ export default function ProfileScreen() {
             return false;
         }
 
-        // Необов’язкові поля (перевіряються, якщо не порожні)
+        
         if (gender && !['Male', 'Female'].includes(gender)) {
             setErrorMessage('Gender must be Male or Female.');
             setIsErrorPopupVisible(true);
@@ -344,7 +382,7 @@ export default function ProfileScreen() {
         return true;
     };
 
-    // Збереження профілю
+    
     const handleSaveProfile = async () => {
         console.log('handleSaveProfile called');
         if (!validateFields()) return;
@@ -352,7 +390,7 @@ export default function ProfileScreen() {
         try {
             let hasChanges = false;
             if (profileImage && profileImage.startsWith('file://')) {
-                // Видалення старого зображення, якщо воно єї
+                
                 console.log("Byte");
 
                 if (imageDescriptors.length > 0) {
@@ -374,14 +412,14 @@ export default function ProfileScreen() {
                     },
                 });
 
-                const newImage = response.data; // PubImageDTO з id, userId, path
+                const newImage :ImageDescriptor  = response.data;
                 console.log('Нове зображення:', newImage);
-                // const fileUri = await fetchImageByPath(newImage.path);
-                // setProfileImage(fileUri);
+                
+                
                 setImageDescriptors([newImage]);
                 hasChanges = true;
             }
-            // Перевірка змін у профілі користувача
+            
             const userPayload = {
                 name,
                 surname,
@@ -424,7 +462,7 @@ export default function ProfileScreen() {
                 hasChanges = true;
             }
 
-            // Перевірка змін у налаштуваннях
+            
             const settingsPayload = {
                 theme: mode.toUpperCase(),
                 fontSize: parseInt(fontSize),
@@ -446,7 +484,7 @@ export default function ProfileScreen() {
                 hasChanges = true;
             }
 
-            // Перевірка змін у залі (тільки для тренерів)
+            
             if (role.toLowerCase() === 'coach') {
                 const gymPayload = {
                     latitude: parseFloat(latitude),
@@ -486,26 +524,27 @@ export default function ProfileScreen() {
                 setIsEditing(false);
             }
         } catch (error) {
-            console.error('Error saving profile:', error);
-            if (error.response?.status === 401) {
+            const AxEr = error as AxiosError;
+            console.error('Error saving profile:', AxEr);
+            if (AxEr.response?.status === 401) {
                 setErrorMessage('Session expired. Please sign in again.');
                 router.push('/sign-in');
-            } else if (error.response?.status === 400) {
+            } else if (AxEr.response?.status === 400) {
                 setErrorMessage(
-                    error.response?.config?.url?.includes('/gym') ? 'Invalid gym data. Please check your inputs.' :
-                        error.response?.config?.url?.includes('/users') ? 'Invalid user data. Please check your inputs.' :
+                    AxEr.response?.config?.url?.includes('/gym') ? 'Invalid gym data. Please check your inputs.' :
+                        AxEr.response?.config?.url?.includes('/users') ? 'Invalid user data. Please check your inputs.' :
                             'Invalid settings data. Please check your inputs.'
                 );
-            } else if (error.response?.status === 403) {
+            } else if (AxEr.response?.status === 403) {
                 setErrorMessage(
-                    error.response?.config?.url?.includes('/gym') ? 'You are not authorized to update gym.' :
-                        error.response?.config?.url?.includes('/users') ? 'You are not authorized to update user.' :
+                    AxEr.response?.config?.url?.includes('/gym') ? 'You are not authorized to update gym.' :
+                        AxEr.response?.config?.url?.includes('/users') ? 'You are not authorized to update user.' :
                             'You are not authorized to update settings.'
                 );
-            } else if (error.response?.status === 404) {
+            } else if (AxEr.response?.status === 404) {
                 setErrorMessage(
-                    error.response?.config?.url?.includes('/gym') ? 'Coach or gym not found.' :
-                        error.response?.config?.url?.includes('/users') ? 'User not found.' :
+                    AxEr.response?.config?.url?.includes('/gym') ? 'Coach or gym not found.' :
+                        AxEr.response?.config?.url?.includes('/users') ? 'User not found.' :
                             'Settings or user not found.'
                 );
             } else {
@@ -515,13 +554,13 @@ export default function ProfileScreen() {
         }
     };
 
-    // Перемикання режиму редагування
+    
     const handleEditProfile = () => {
         console.log('Entering edit mode');
         setIsEditing(true);
     };
 
-    // Скасування редагування
+    
     const handleCancelEdit = () => {
         console.log('Canceling edit mode');
         setIsEditing(false);
@@ -546,7 +585,7 @@ export default function ProfileScreen() {
                     setAddress(userData.gym?.address || '');
                     setClients(userData.clients || []);
 
-                    // Оновлення початкових значень gym
+                    
                     setInitialGym({
                         latitude: userData.gym?.latitude || '',
                         longitude: userData.gym?.longitude || '',
@@ -559,7 +598,7 @@ export default function ProfileScreen() {
                     setNotifications(userData.settings.notifications || false);
                     setFontSize(userData.settings.fontSize ? userData.settings.fontSize.toString() : '12');
 
-                    // Оновлення початкових значень settings
+                    
                     setInitialSettings({
                         theme: userData.settings.theme ? userData.settings.theme.charAt(0) + userData.settings.theme.slice(1).toLowerCase() : 'Purple',
                         fontSize: userData.settings.fontSize ? userData.settings.fontSize.toString() : '12',
@@ -576,7 +615,7 @@ export default function ProfileScreen() {
                 } else {
                     setProfileImage(null);
                 }
-                // Оновлення початкових значень user
+                
                 setInitialUser({
                     name: userData.name || '',
                     surname: userData.surname || '',
@@ -598,7 +637,7 @@ export default function ProfileScreen() {
         reloadUserData();
     };
 
-    // Функція для повернення назад
+    
     const handleGoBack = () => {
         console.log('Going back');
         router.back();
@@ -770,7 +809,6 @@ export default function ProfileScreen() {
                                 <TextInput
                                     style={[styles.input, { backgroundColor: theme.inputBackground, color: theme.inputText, borderColor: theme.inputBorder }]}
                                     value={role}
-                                    onChangeText={setRole}
                                     placeholder="Your role"
                                     placeholderTextColor={theme.inputText}
                                     editable={false}

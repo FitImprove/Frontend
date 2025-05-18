@@ -7,8 +7,26 @@ import { useState } from 'react';
 import { heightPercentageToDP as hp, widthPercentageToDP as wp } from 'react-native-responsive-screen';
 import ErrorPopup from '../src/components/ErrorPopup';
 
+/**
+ * Type for user role
+ * @typedef Role
+ */
 type Role = 'USER' | 'COACH';
 
+/**
+ * SignUpScreen component handles the first step of user registration.
+ *
+ * @remarks
+ * - Collects and validates first name, second name, username, date of birth, and role.
+ * - Uses a modal for selecting user role (USER or COACH).
+ * - Navigates to the next registration step with validated data.
+ * - Applies ThemeContext for styling and WaveBackground for visual design.
+ * - Supports responsive design for tablets and phones with react-native-responsive-screen.
+ * - Displays error popups for invalid inputs with detailed feedback.
+ * - Provides a link to the sign-in screen for existing users.
+ *
+ * @returns {JSX.Element} Rendered sign-up interface with input fields, role selection, and navigation.
+ */
 export default function SignUpScreen() {
     const { theme } = useTheme();
 
@@ -21,6 +39,10 @@ export default function SignUpScreen() {
     const [errorMessage, setErrorMessage] = useState('');
     const [isErrorPopupVisible, setIsErrorPopupVisible] = useState(false);
 
+    /**
+     * Validates the sign-up form inputs
+     * @returns {boolean} True if the form is valid, false otherwise
+     */
     const validateForm = () => {
         if (
             !firstName ||
@@ -86,6 +108,9 @@ export default function SignUpScreen() {
         return true;
     };
 
+    /**
+     * Navigates to the next registration step with validated data
+     */
     const handleContinue = () => {
         if (validateForm()) {
             router.push({
@@ -95,6 +120,9 @@ export default function SignUpScreen() {
         }
     };
 
+    /**
+     * Closes the error popup
+     */
     const closeErrorPopup = () => {
         setIsErrorPopupVisible(false);
         setErrorMessage('');
@@ -116,7 +144,7 @@ export default function SignUpScreen() {
                         paddingHorizontal: wp('5%'),
                         paddingVertical: hp('2%'),
                     }}
-                    keyboardShouldPersistTaps="handled"
+                    keyboardShouldPersistTaps='handled'
                 >
                     <View style={styles.innerContainer}>
                         <View style={styles.textContainer}>
@@ -128,7 +156,7 @@ export default function SignUpScreen() {
                                 <Text style={[styles.label, { color: theme.textOnElement }]}>First name</Text>
                                 <TextInput
                                     style={[styles.input, { backgroundColor: theme.inputBackground, color: theme.inputText }]}
-                                    placeholder="Enter first name"
+                                    placeholder='Enter first name'
                                     placeholderTextColor={theme.inputText}
                                     value={firstName}
                                     onChangeText={setFirstName}
@@ -138,7 +166,7 @@ export default function SignUpScreen() {
                                 <Text style={[styles.label, { color: theme.textOnElement }]}>Second name</Text>
                                 <TextInput
                                     style={[styles.input, { backgroundColor: theme.inputBackground, color: theme.inputText }]}
-                                    placeholder="Enter second name"
+                                    placeholder='Enter second name'
                                     placeholderTextColor={theme.inputText}
                                     value={secondName}
                                     onChangeText={setSecondName}
@@ -148,7 +176,7 @@ export default function SignUpScreen() {
                                 <Text style={[styles.label, { color: theme.textOnElement }]}>Username</Text>
                                 <TextInput
                                     style={[styles.input, { backgroundColor: theme.inputBackground, color: theme.inputText }]}
-                                    placeholder="Enter username"
+                                    placeholder='Enter username'
                                     placeholderTextColor={theme.inputText}
                                     value={username}
                                     onChangeText={setUsername}
@@ -158,7 +186,7 @@ export default function SignUpScreen() {
                                 <Text style={[styles.label, { color: theme.textOnElement }]}>Date of birthday</Text>
                                 <TextInput
                                     style={[styles.input, { backgroundColor: theme.inputBackground, color: theme.inputText }]}
-                                    placeholder="DD.MM.YYYY"
+                                    placeholder='DD.MM.YYYY'
                                     placeholderTextColor={theme.inputText}
                                     value={dateOfBirth}
                                     onChangeText={setDateOfBirth}
@@ -183,7 +211,7 @@ export default function SignUpScreen() {
                             </View>
                         </TouchableOpacity>
 
-                        <Link href="/sign-in">
+                        <Link href='/sign-in'>
                             <Text style={[styles.linkText, { color: theme.text }]}>I already have an account</Text>
                         </Link>
                     </View>
@@ -191,7 +219,7 @@ export default function SignUpScreen() {
             </KeyboardAvoidingView>
 
             <Modal
-                animationType="fade"
+                animationType='fade'
                 transparent={true}
                 visible={modalVisible}
                 onRequestClose={() => setModalVisible(false)}
@@ -199,7 +227,6 @@ export default function SignUpScreen() {
                 <View style={styles.modalOverlay}>
                     <View style={[styles.modalContent, { backgroundColor: theme.inputContainer, borderColor: theme.borderColor }]}>
                         <TouchableOpacity
-                            style={styles.modalOption}
                             onPress={() => {
                                 setRole('USER');
                                 setModalVisible(false);
@@ -208,7 +235,6 @@ export default function SignUpScreen() {
                             <Text style={[styles.modalOptionText, { color: theme.inputText }]}>User</Text>
                         </TouchableOpacity>
                         <TouchableOpacity
-                            style={styles.modalOption}
                             onPress={() => {
                                 setRole('COACH');
                                 setModalVisible(false);

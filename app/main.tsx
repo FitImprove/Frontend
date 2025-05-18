@@ -36,7 +36,7 @@ export default function MainScreen() {
                             alignItems: 'center',
                             paddingHorizontal: wp('5%'),
                             paddingVertical: hp('2%'),
-                            paddingBottom: hp('10%'), // Додаємо відступ знизу для нижньої панелі
+                            paddingBottom: hp('10%'), 
                         }}
                         keyboardShouldPersistTaps="handled"
                     >

@@ -3,12 +3,24 @@ import { Modal, View, Text, TouchableOpacity } from 'react-native';
 import { useTheme } from '@/src/contexts/ThemeContext';
 import { heightPercentageToDP as hp, widthPercentageToDP as wp } from 'react-native-responsive-screen';
 
-type ErrorPopupProps = {
+/**
+ * Props for the ErrorPopup component
+ * @interface ErrorPopupProps
+ */
+export type ErrorPopupProps = {
+    /** Whether the popup is visible */
     visible: boolean;
+    /** The error message to display */
     message: string;
+    /** Callback to close the popup */
     onClose: () => void;
 };
 
+/**
+ * A modal popup for displaying error messages
+ * @param {ErrorPopupProps} props - The component props
+ * @returns {JSX.Element} The rendered error popup
+ */
 const ErrorPopup: React.FC<ErrorPopupProps> = ({ visible, message, onClose }) => {
     const { theme } = useTheme();
 

@@ -5,17 +5,37 @@ import { widthPercentageToDP as wp } from 'react-native-responsive-screen';
 import BottomNavWave from './BottomNavWave';
 import { useRole } from '../contexts/RoleContext';
 
-type NavigationItem = {
+/**
+ * Represents a navigation item in the bottom navigation bar
+ * @interface NavigationItem
+ */
+interface NavigationItem {
+    /**
+     * Unique identifier for the navigation item
+     */
     id: string;
+    /**
+     * Icon to display for the navigation item
+     */
     icon: string;
+    /**
+     * Route to navigate to when the item is pressed
+     */
     route: Href;
-};
+}
 
+/**
+ * A component that renders a bottom navigation bar with role-based navigation items
+ * @returns {JSX.Element} The rendered bottom navigation bar
+ */
 export default function BottomNavigation() {
     const router: Router = useRouter();
-
     const { role } = useRole();
     const [navigations, setNavigations] = useState<NavigationItem[]>([]);
+
+    /**
+     * Updates navigation items based on the user's role
+     */
     useEffect(() => {
         setNavigations([
             { id: 'chat', icon: '💬', route: '/chats' },
@@ -28,6 +48,10 @@ export default function BottomNavigation() {
         ]);
     }, [role]);
 
+    /**
+     * Handles navigation to the specified route
+     * @param route - The route to navigate to
+     */
     const handleNavigation = (route: Href) => {
         router.push(route);
     };

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, TouchableOpacity, FlatList, Image, Dimensions } from 'react-native';
 import { useTheme } from '@/src/contexts/ThemeContext';
-import { getStyles } from '@/src/styles/ChatsStyles'; // Оновлено імпорт
+import { getStyles } from '@/src/styles/ChatsStyles';
 import { router, useRouter } from 'expo-router';
 import { heightPercentageToDP as hp, widthPercentageToDP as wp } from 'react-native-responsive-screen';
 import { api, getRole, Role } from '@/src/utils/api';
@@ -12,16 +12,72 @@ import { useFocusEffect } from '@react-navigation/native';
 import { useCallback } from 'react';
 import * as FileSystem from "expo-file-system";
 import { encode } from "base64-arraybuffer";
+import {AxiosError} from "axios";
 
-// Визначення типу пристрою (телефон чи планшет)
+
 const { width } = Dimensions.get('window');
-const isTablet = width >= 768; // Планшетом вважаємо пристрій із шириною екрану >= 768 пікселів
+const isTablet = width >= 768;
+/**
+ * Represents a single message in a chat.
+ * @property content - The text content of the message.
+ * @property sentAt - The ISO string timestamp when the message was sent.
+ */
+export interface Message {
+    content: string;
+    sentAt: string;
+}
 
+/**
+ * Represents a user participating in a chat.
+ * @property id - Unique identifier of the user.
+ * @property name - First name of the user.
+ * @property surname - Last name (surname) of the user.
+ */
+export interface User {
+    id: number;
+    name: string;
+    surname: string;
+}
+
+/**
+ * Represents a chat conversation between a coach and a regular user.
+ * @property id - Unique chat identifier.
+ * @property coach - The coach participant (nullable).
+ * @property regularUser - The regular user participant (nullable).
+ * @property messages - List of messages exchanged in the chat.
+ * @property createdAt - Timestamp when the chat was created.
+ * @property updatedAt - Timestamp of the last update in the chat.
+ * @property avatar - URI or local path to the participant's avatar image (nullable).
+ */
+export interface Chat {
+    id: number;
+    coach: User | null;
+    regularUser: User | null;
+    messages: Message[];
+    createdAt: string;
+    updatedAt: string;
+    avatar: string | null;
+}
+
+/**
+ * ChatsScreen component displays a list of chat conversations for the current user or coach.
+ *
+ * @remarks
+ * - Fetches chats from the backend based on user role (coach or regular user).
+ * - Loads and caches participant avatars locally using Expo FileSystem to optimize performance.
+ * - Handles role retrieval and session validation with redirects on unauthorized access.
+ * - Uses React Navigation's useRouter for navigation and manages theme styling with a custom ThemeContext.
+ * - Displays error popups on failures and allows retry or navigation to sign-in/home screens.
+ * - Supports responsive design for tablets and phones.
+ * - Utilizes useFocusEffect to refresh chats on screen focus.
+ *
+ * @returns {JSX.Element} Rendered list of chat items with participant avatars, last message previews, and navigation handlers.
+ */
 export default function ChatsScreen() {
     const { theme } = useTheme();
-    const styles = getStyles(theme, isTablet); // Вибираємо стилі залежно від типу пристрою
+    const styles = getStyles(theme, isTablet);
     const router = useRouter();
-    const [chats, setChats] = useState([]);
+    const [chats, setChats] = useState<Chat[]>([]);
     const [role, setRole] = useState<Role | null>(null);
     const [errorMessage, setErrorMessage] = useState('');
     const [isErrorPopupVisible, setIsErrorPopupVisible] = useState(false);
@@ -87,10 +143,11 @@ export default function ChatsScreen() {
 
                     const endpoint = storedRole === 'COACH' ? '/chats/coach' : '/chats/user';
                     const response = await api.get(endpoint);
+                    console.log(response.data);
                     const chatData = response.data || [];
 
                     const updatedChats = await Promise.all(
-                        chatData.map(async (chat: any) => {
+                        chatData.map(async (chat: Chat) => {
                             const participantId = storedRole === 'COACH' ? chat.regularUser?.id : chat.coach?.id;
                             const avatar = participantId ? await fetchAvatar(participantId) : null;
                             return { ...chat, avatar };
@@ -99,13 +156,14 @@ export default function ChatsScreen() {
 
                     setChats(updatedChats);
                 } catch (error) {
-                    console.error('Error loading chats:', error);
-                    if (error.response?.status === 401) {
+                    const axErr = error as AxiosError;
+                    console.error('Error loading chats:', axErr);
+                    if (axErr.response?.status === 401) {
                         setErrorMessage('Session expired. Please sign in again.');
                         router.push('/sign-in');
-                    } else if (error.response?.status === 403) {
+                    } else if (axErr.response?.status === 403) {
                         setErrorMessage('Access denied.');
-                    } else if (error.response?.status === 404) {
+                    } else if (axErr.response?.status === 404) {
                         setErrorMessage('Chats not found.');
                     } else {
                         setErrorMessage('Failed to load chats. Please try again.');
@@ -131,7 +189,7 @@ export default function ChatsScreen() {
         setErrorMessage('');
     };
 
-    const getParticipantName = (chat: any) => {
+    const getParticipantName = (chat: Chat) => {
         if (role === 'COACH') {
             return `${chat.regularUser?.name || 'Unknown'} ${chat.regularUser?.surname || ''}`.trim();
         } else {
@@ -139,7 +197,7 @@ export default function ChatsScreen() {
         }
     };
 
-    const getLastMessageInfo = (chat: any) => {
+    const getLastMessageInfo = (chat: Chat) => {
         const messages = chat.messages || [];
         const lastMessage = messages.length > 0 ? messages[messages.length - 1] : null;
         return {
@@ -148,7 +206,7 @@ export default function ChatsScreen() {
         };
     };
 
-    const renderChatItem = ({ item }: { item: any }) => (
+    const renderChatItem = ({ item }: { item: Chat }) => (
         <TouchableOpacity
             onPress={() => handleChatPress(item.id)}
             style={[styles.chatCard, { backgroundColor: theme.inputContainer, borderColor: theme.borderColor }]}

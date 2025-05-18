@@ -23,13 +23,23 @@ import * as BackgroundFetch from 'expo-background-fetch';
 
 const UPCOMING_TRAININGS_CNT = 2;
 
-// Визначення типу пристрою (телефон чи планшет)
-const { width, height } = Dimensions.get('window');
-const isTablet = width >= 768; // Планшетом вважаємо пристрій із шириною екрану >= 768 пікселів
 
+const { width, height } = Dimensions.get('window');
+const isTablet = width >= 768;
+/**
+ * Home component displays upcoming trainings and invitations for the logged-in user.
+ * @remarks
+ * It fetches and shows a limited number of upcoming training sessions with options to cancel them.
+ * For users with the role 'USER', it also displays training invitations that can be accepted or denied.
+ * Coaches have the ability to navigate to a screen for creating new trainings.
+ * The component manages theme initialization and handles user logout securely.
+ * It supports responsive layouts by adapting styles for phones and tablets.
+ * Background tasks are registered to manage training reminders.
+ * Toast notifications provide feedback for success or error states during operations.
+ */
 export default function Home() {
     const { theme, toggleTheme } = useTheme();
-    const style = isTablet ? getTabletStyle(theme) : getPhoneStyle(theme); // Вибираємо стилі залежно від типу пристрою
+    const style = isTablet ? getTabletStyle(theme) : getPhoneStyle(theme); 
     const styles = getGlobalStyle(theme);
     const cancelTrainingError = (e: any) => {
         Toast.show({
@@ -65,7 +75,7 @@ export default function Home() {
 
     async function initSettings() {
         try {
-            // Спроба отримати налаштування з бекенду
+            
             const response = await api.get("/settings/user");
             console.log(response.data);
             let _theme = await AsyncStorage.getItem('theme');
@@ -99,10 +109,10 @@ export default function Home() {
             _init();
             initSettings();
             await registerTrainingReminderTask();
-            const testBackgroundTask = async () => {
-                const result = await BackgroundFetch.performFetchAsync(BACKGROUND_NOTIFICATION_TASK);    
-                console.log('Manual background task result:', result);
-            };testBackgroundTask();
+            // const testBackgroundTask = async () => {
+            //     const result = await BackgroundFetch.performFetchAsync(BACKGROUND_NOTIFICATION_TASK);
+            //     console.log('Manual background task result:', result);
+            // };testBackgroundTask();
         }
         q();
     }, []);
@@ -131,8 +141,8 @@ export default function Home() {
             router.push('/');
         } catch (error: any) {
             console.error('Error during logout:', error);
-            // setErrorMessage('Failed to logout. Please try again.');
-            // setIsErrorPopupVisible(true);
+            
+            
         }
     }
     useFocusEffect(
@@ -172,7 +182,7 @@ export default function Home() {
         }
     }
 
-    // Функція для рендерингу TrainingCard у FlatList для планшетів (для trainings)
+    
     const renderTrainingCard = ({ item, index }: { item: Training; index: number }) => (
         <View style={{ width: '49%' }}> {/* Максимально широкі колонки без відступів */}
 
@@ -184,7 +194,7 @@ export default function Home() {
         </View>
     );
 
-    // Функція для рендерингу TrainingCard у FlatList для планшетів (для invitations)
+    
     const renderInvitationCard = ({ item, index }: { item: Training; index: number }) => (
         <View style={{ width: '49%' }}> {/* Максимально широкі колонки без відступів */}
             <TrainingCard
@@ -203,7 +213,7 @@ export default function Home() {
             <ScrollView
                 style={{ flex: 1 }}
                 contentContainerStyle={{
-                    paddingHorizontal: wp(isTablet ? '3%' : '5%'), // Менший padding для планшетів
+                    paddingHorizontal: wp(isTablet ? '3%' : '5%'), 
                     paddingVertical: hp(isTablet ? '1%' : '2%'),
                     paddingBottom: hp(isTablet ? '10%' : '15%'),
                 }}
@@ -216,7 +226,7 @@ export default function Home() {
                     marginTop: hp(isTablet ? '2%' : '4%'),
                 }}>
                     <View style={{
-                        width: isTablet ? '95%' : '95%', // Максимальна ширина контейнера для планшетів
+                        width: isTablet ? '95%' : '95%', 
                         padding: 1,
                         borderWidth: 1,
                         borderRadius: 20,
@@ -229,8 +239,8 @@ export default function Home() {
                                 data={trainings}
                                 renderItem={renderTrainingCard}
                                 keyExtractor={(item, index) => index.toString()}
-                                numColumns={2} // Дві колонки для планшетів
-                                contentContainerStyle={{}} // Прибрано відступи
+                                numColumns={2} 
+                                contentContainerStyle={{}} 
                             />
                         ) : (
                             trainings.map((training, idx) => (
@@ -276,7 +286,7 @@ export default function Home() {
                     {role === 'USER' && <>
                         <Text style={styles.titleText}>Invitations</Text>
                         <View style={{
-                            width: isTablet ? '95%' : '95%', // Максимальна ширина контейнера для планшетів
+                            width: isTablet ? '95%' : '95%', 
                             padding: 1,
                             borderWidth: 1,
                             borderRadius: 20,
@@ -289,8 +299,8 @@ export default function Home() {
                                     data={invitations}
                                     renderItem={renderInvitationCard}
                                     keyExtractor={(item, index) => index.toString()}
-                                    numColumns={2} // Дві колонки для планшетів
-                                    contentContainerStyle={{}} // Прибрано відступи
+                                    numColumns={2} 
+                                    contentContainerStyle={{}} 
                                 />
                             ) : (
                                 invitations.map((t, idx) => (
@@ -318,7 +328,7 @@ export default function Home() {
     )
 }
 
-// Стилі для телефонів
+
 export const getPhoneStyle = (theme: Theme) => {
     return StyleSheet.create({
         container: {
@@ -367,7 +377,7 @@ export const getPhoneStyle = (theme: Theme) => {
     });
 };
 
-// Стилі для планшетів
+
 export const getTabletStyle = (theme: Theme) => {
     return StyleSheet.create({
         container: {
@@ -377,7 +387,7 @@ export const getTabletStyle = (theme: Theme) => {
             backgroundColor: theme.background,
         },
         image: {
-            width: wp('50%'), // Менше зображення для планшетів
+            width: wp('50%'), 
             height: hp('25%'),
             borderRadius: wp('2%'),
             borderWidth: 2,
@@ -389,7 +399,7 @@ export const getTabletStyle = (theme: Theme) => {
             marginVertical: hp('2%'),
         },
         text: {
-            fontSize: wp('5%'), // Менший розмір шрифту для планшетів
+            fontSize: wp('5%'), 
             fontWeight: 'bold',
             textAlign: 'center',
             fontFamily: 'InriaSerif-Regular',
@@ -400,7 +410,7 @@ export const getTabletStyle = (theme: Theme) => {
             alignItems: 'center',
         },
         button: {
-            width: wp('50%'), // Менша ширина кнопки
+            width: wp('50%'), 
             height: hp('6%'),
             borderRadius: wp('2%'),
             marginVertical: hp('1%'),
@@ -409,7 +419,7 @@ export const getTabletStyle = (theme: Theme) => {
             borderWidth: 2,
         },
         buttonText: {
-            fontSize: wp('4%'), // Менший шрифт для кнопок
+            fontSize: wp('4%'), 
             fontWeight: 'bold',
             fontFamily: 'InriaSerif-Regular',
         },

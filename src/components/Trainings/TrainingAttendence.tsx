@@ -4,9 +4,18 @@ import TrainingMonthGrid from "../Trainings/TrainingMonthGrid";
 import { Training } from "../../utils/training";
 import { useTheme } from '../../contexts/ThemeContext';
 
-interface TrainingCalendarProps {}
+/**
+ * Props for the TrainingAttendance component
+ * @interface TrainingAttendanceProps
+ */
+export interface TrainingAttendanceProps {}
 
-function TrainingAttendance({}: TrainingCalendarProps) {
+/**
+ * A component that displays a calendar for viewing training attendance
+ * @param {TrainingAttendanceProps} props - The component props
+ * @returns {JSX.Element} The rendered training attendance calendar
+ */
+function TrainingAttendance({}: TrainingAttendanceProps) {
     const { theme } = useTheme();
 
     const time = new Date();
@@ -16,6 +25,9 @@ function TrainingAttendance({}: TrainingCalendarProps) {
     const [trainings, setTrainings] = useState<Training[]>([]);
     const [showDate, setShowDate] = useState<Date>(new Date());
 
+    /**
+     * Navigates to the next month
+     */
     function next() {
         let _y = year + Number(month == 11);
         let _m = (month + 1) % 12;
@@ -25,11 +37,20 @@ function TrainingAttendance({}: TrainingCalendarProps) {
         setYear(y => y + Number(month == 11));
         setMonth(m => (m + 1) % 12);
     }
+
+    /**
+     * Navigates to the previous month
+     */
     function prev() {
         setYear(y => y - Number(month == 0));
         setMonth(m => (m - 1 + 12) % 12);
     }
 
+    /**
+     * Shows training details for a selected day
+     * @param trainings - Array of trainings for the selected date
+     * @param date - The selected date
+     */
     function showDay(trainings: Training[], date: Date) {
         setShowDate(date);
         setTrainings(trainings);
@@ -73,13 +94,20 @@ function TrainingAttendance({}: TrainingCalendarProps) {
                             const t = train.time;
                             const t1 = train.time;
                             t1.setMinutes(t.getMinutes() + train.duration);
-                            return <View key={idx} style={styles.itemContainer}>
-                                <Text style={{color: theme.text}}>{t.getHours()}:{t.getMinutes()}-{t1.getHours()}:{t1.getMinutes()}</Text>
-                                <Text style={{color: theme.text}}>With {train.coachName}</Text>
-                                <Text style={{color: theme.text}}>Title: {train.title}</Text>
-                            </View>
+                            return (
+                                <View key={idx} style={styles.itemContainer}>
+                                    <Text style={{color: theme.text}}>
+                                        {t.getHours()}:{t.getMinutes().toString().padStart(2, '0')}-{t1.getHours()}:{t1.getMinutes().toString().padStart(2, '0')}
+                                    </Text>
+                                    <Text style={{color: theme.text}}>With {train.coachName}</Text>
+                                    <Text style={{color: theme.text}}>Title: {train.title}</Text>
+                                </View>
+                            );
                         })}
-                        <TouchableOpacity onPress={() => setVisible(false)} style={{backgroundColor: theme.buttonBackground, padding: 10, borderRadius: 5}}>
+                        <TouchableOpacity
+                            onPress={() => setVisible(false)}
+                            style={{backgroundColor: theme.buttonBackground, padding: 10, borderRadius: 5}}
+                        >
                             <Text style={{color: theme.text}}>Close</Text>
                         </TouchableOpacity>
                     </View>
@@ -89,6 +117,9 @@ function TrainingAttendance({}: TrainingCalendarProps) {
     );
 }
 
+/**
+ * Styles for the TrainingAttendance component
+ */
 const styles = StyleSheet.create({
     container: {
         flexDirection: "row",
@@ -109,7 +140,7 @@ const styles = StyleSheet.create({
     },
     gridWrapper: {
         flexDirection: "row",
-        gap: 1, // if using RN >= 0.71, or replace with marginRight on first grid if not
+        gap: 1,
     },
     modalOverlay: {
         flex: 1,

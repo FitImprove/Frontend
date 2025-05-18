@@ -92,7 +92,7 @@ export default function CreateTraining() {
                 }}            keyboardShouldPersistTaps="handled"
             >
                 <TouchableOpacity onPress={handleGoBack}>
-                    <Text style={[styles.text, { color: theme.accent || '#ff00cc', fontSize: wp('6%') }]}>←</Text>
+                    <Text style={[styles.titleText, { color: theme.accent || '#ff00cc', fontSize: wp('6%') }]}>←</Text>
                 </TouchableOpacity>
                 <Text style={[styles.titleText, {marginTop: hp("6%")}]}>Create Appointment</Text>
                 <TrainingDataInput training={training} setTraining={setTraining} isTimeChangable={true} />

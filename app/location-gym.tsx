@@ -1,47 +1,111 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { View, TouchableOpacity, Text, TextInput, FlatList } from 'react-native';
-import MapView, { Marker } from 'react-native-maps';
+import MapView, { Marker, LongPressEvent } from 'react-native-maps';
 import { useTheme } from '@/src/contexts/ThemeContext';
 import { styles } from '@/src/styles/MapStyles';
-import {useLocalSearchParams, useRouter} from 'expo-router';
-import ErrorPopup from '@/src/components/ErrorPopup'; // Імпортуємо твій попап
+import { useLocalSearchParams, useRouter } from 'expo-router';
+import ErrorPopup from '@/src/components/ErrorPopup';
 
-type Coordinate = {
-  latitude: number;
-  longitude: number;
+// Типи для параметрів
+/**
+ * Parameters passed to the map screen for initializing location and address.
+ */
+export interface LocationGymParams {
+    /** Latitude as a string, optional. Defaults can be applied if missing. */
+    latitude?: string;
+    /** Longitude as a string, optional. Defaults can be applied if missing. */
+    longitude?: string;
+    /** Address string, optional, can be used as initial search query. */
+    address?: string;
+}
+
+/**
+ * Geographic coordinate with latitude and longitude values.
+ */
+export type Coordinate = {
+    /** Latitude in decimal degrees. */
+    latitude: number;
+    /** Longitude in decimal degrees. */
+    longitude: number;
 };
 
-type Region = {
-  latitude: number;
-  longitude: number;
-  latitudeDelta: number;
-  longitudeDelta: number;
+/**
+ * Map region describing the visible area on the map.
+ */
+export type Region = {
+    /** Center latitude of the region in decimal degrees. */
+    latitude: number;
+    /** Center longitude of the region in decimal degrees. */
+    longitude: number;
+    /** Latitude span of the region (zoom level). */
+    latitudeDelta: number;
+    /** Longitude span of the region (zoom level). */
+    longitudeDelta: number;
 };
 
+/**
+ * Suggestion returned from autocomplete API representing a place.
+ */
+export interface Suggestion {
+    /** Unique identifier of the place in Google Places API. */
+    place_id: string;
+    /** Human-readable description of the place for display in suggestions. */
+    description: string;
+}
+
+/**
+ * MapSearchScreen component provides an interactive map interface to search and select locations.
+ *
+ * @remarks
+ * * Initializes map region and marker from optional query parameters or defaults.
+ * * Allows users to search locations with autocomplete suggestions using Google Places API.
+ * * Supports selecting a suggestion to update the marker and center the map accordingly.
+ * * Enables placing a marker by long-pressing on the map, with reverse geocoding to fetch the address.
+ * * Displays error popups for API failures or missing data during search and reverse geocoding.
+ * * Allows saving the selected location's coordinates and address, then navigates back with parameters.
+ * * Utilizes theming from a custom ThemeContext for consistent styling.
+ *
+ * @returns {JSX.Element} Interactive map view with search input, suggestions list, marker placement, and save button.
+ */
 export default function MapSearchScreen() {
     const { theme } = useTheme();
     const router = useRouter();
-    const mapRef = useRef(null);
-    const params = useLocalSearchParams();
-    const [searchQuery, setSearchQuery] = useState(params.address || '');
+    const mapRef = useRef<MapView>(null);
+    const rawParams = useLocalSearchParams();
+    const params: LocationGymParams = {
+        latitude: Array.isArray(rawParams.latitude) ? rawParams.latitude[0] : rawParams.latitude,
+        longitude: Array.isArray(rawParams.longitude) ? rawParams.longitude[0] : rawParams.longitude,
+        address: Array.isArray(rawParams.address) ? rawParams.address[0] : rawParams.address,
+    };
+
+    // Перевірка і приведення параметрів до string
+    const latitude = Array.isArray(params.latitude)
+        ? params.latitude[0]
+        : params.latitude || '48.1486';
+    const longitude = Array.isArray(params.longitude)
+        ? params.longitude[0]
+        : params.longitude || '17.1077';
+    const address = Array.isArray(params.address) ? params.address[0] : params.address || '';
+
+    const [searchQuery, setSearchQuery] = useState<string>(address);
     const [marker, setMarker] = useState<Coordinate>({
-        latitude: parseFloat(params.latitude) || 48.1486, // Центр Братислави
-        longitude: parseFloat(params.longitude) || 17.1077,
+        latitude: parseFloat(latitude),
+        longitude: parseFloat(longitude),
     });
     const [region, setRegion] = useState<Region>({
-        latitude: parseFloat(params.latitude) || 48.1486,
-        longitude: parseFloat(params.longitude) || 17.1077,
+        latitude: parseFloat(latitude),
+        longitude: parseFloat(longitude),
         latitudeDelta: 0.0922,
         longitudeDelta: 0.0421,
     });
-    const [suggestions, setSuggestions] = useState([]);
+    const [suggestions, setSuggestions] = useState<Suggestion[]>([]);
     const [popup, setPopup] = useState({ visible: false, message: '' });
 
     useEffect(() => {
         console.log('Marker updated:', marker);
     }, [marker]);
 
-    const showPopup = (message) => {
+    const showPopup = (message: string) => {
         setPopup({ visible: true, message });
     };
 
@@ -49,10 +113,8 @@ export default function MapSearchScreen() {
         setPopup({ visible: false, message: '' });
     };
 
-    const handleMapPress = async (e) => {
-        console.log("Coordinate 41");
+    const handleMapPress = async (e: LongPressEvent) => {
         const { latitude, longitude } = e.nativeEvent.coordinate;
-        console.log("EndCoordinate 41");
         setMarker({ latitude, longitude });
         setRegion({ ...region, latitude, longitude });
         console.log('New marker position:', { latitude, longitude });
@@ -78,7 +140,7 @@ export default function MapSearchScreen() {
         }
     };
 
-    const fetchSuggestions = async (query) => {
+    const fetchSuggestions = async (query: string) => {
         if (!query.trim()) {
             setSuggestions([]);
             return;
@@ -105,7 +167,7 @@ export default function MapSearchScreen() {
         }
     };
 
-    const handleSelectSuggestion = async (suggestion) => {
+    const handleSelectSuggestion = async (suggestion: Suggestion) => {
         try {
             const placeId = suggestion.place_id;
             const response = await fetch(
